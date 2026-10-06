@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="version" content="3.2">
+<meta name="description" content="GoodReel Pick finds four well-rated movies streaming in Canada or the US tonight.">
+<title>GoodReel Pick</title>
+<script>
+  /* Apply saved theme before paint to avoid a flash */
+  try { const t = localStorage.getItem("goodreel.theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch {}
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%228%22%20fill%3D%22%235FACE7%22/%3E%3Cg%20transform%3D%22translate%284%204%29%22%20fill%3D%22%231E3A5F%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M2.50%2010.50a8%208%200%201%200%2016%200a8%208%200%201%200%20-16%200ZM8.70%206.10a1.8%201.8%200%201%200%203.6%200a1.8%201.8%200%201%200%20-3.6%200ZM12.88%209.14a1.8%201.8%200%201%200%203.6%200a1.8%201.8%200%201%200%20-3.6%200ZM11.29%2014.06a1.8%201.8%200%201%200%203.6%200a1.8%201.8%200%201%200%20-3.6%200ZM6.11%2014.06a1.8%201.8%200%201%200%203.6%200a1.8%201.8%200%201%200%20-3.6%200ZM4.52%209.14a1.8%201.8%200%201%200%203.6%200a1.8%201.8%200%201%200%20-3.6%200ZM9.60%2010.50a0.9%200.9%200%201%200%201.8%200a0.9%200.9%200%201%200%20-1.8%200Z%22/%3E%3Crect%20x%3D%2210.5%22%20y%3D%2217%22%20width%3D%2211.5%22%20height%3D%223%22%20rx%3D%221.5%22/%3E%3Cpath%20d%3D%22M20%20.8Q20.6%203.4%2023.2%204%2020.6%204.6%2020%207.2%2019.4%204.6%2016.8%204%2019.4%203.4%2020%20.8Z%22/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500&display=swap">
+<style>
+/* Layout: one centered column — header, a single filter card, then a 4-up poster grid (2 on tablets and phones).
+   Tokens: shadcn/ui naming (zinc base + pastel sky accent), hand-written. App tokens added: --rating, --tomato, --leaf, --award (Oscars gold) and --award-foreground. */
+:root {
+  --radius: 0.625rem;
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --primary: oklch(0.72 0.115 243);
+  --primary-foreground: oklch(0.22 0.06 252);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.7 0.11 240);
+  --selected: oklch(0.955 0.028 238);
+  --selected-border: oklch(0.74 0.1 242);
+  --selected-foreground: oklch(0.3 0.08 252);
+  --overlay: oklch(0 0 0 / 0.5);
+  --success: oklch(0.6 0.15 150);
+
+  /* App-specific */
+  --rating: oklch(0.7 0.16 70);     /* TMDB star */
+  --tomato: oklch(0.6 0.21 30);     /* RT tomato */
+  --leaf: oklch(0.6 0.15 145);
+  --award: oklch(0.76 0.15 82);     /* Oscars gold */
+  --award-foreground: oklch(0.24 0.05 70);
+  --gem: oklch(0.5 0.17 289);       /* Hidden gems violet, ≈ #6b4fc7 */
+  --gem-foreground: oklch(0.99 0.005 289);
+
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 oklch(0 0 0 / 0.08), 0 1px 2px -1px oklch(0 0 0 / 0.08);
+  --shadow-lg: 0 10px 15px -3px oklch(0 0 0 / 0.1), 0 4px 6px -4px oklch(0 0 0 / 0.1);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: oklch(0.141 0.005 285.823);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.21 0.006 285.885);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.21 0.006 285.885);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.76 0.11 240);
+    --primary-foreground: oklch(0.2 0.05 252);
+    --secondary: oklch(0.274 0.006 286.033);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.274 0.006 286.033);
+    --muted-foreground: oklch(0.705 0.015 286.067);
+    --accent: oklch(0.274 0.006 286.033);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.72 0.1 240);
+    --selected: oklch(0.3 0.05 245);
+    --selected-border: oklch(0.68 0.1 240);
+    --selected-foreground: oklch(0.9 0.045 238);
+    --overlay: oklch(0 0 0 / 0.7);
+    --success: oklch(0.72 0.15 150);
+    --rating: oklch(0.8 0.15 80);
+    --tomato: oklch(0.68 0.2 30);
+    --leaf: oklch(0.7 0.15 145);
+    --award: oklch(0.83 0.14 88);
+    --award-foreground: oklch(0.2 0.045 70);
+    --gem: oklch(0.74 0.13 292);
+    --gem-foreground: oklch(0.2 0.06 292);
+    --shadow-sm: 0 1px 3px 0 oklch(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 30px -5px oklch(0 0 0 / 0.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.76 0.11 240);
+  --primary-foreground: oklch(0.2 0.05 252);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.72 0.1 240);
+  --selected: oklch(0.3 0.05 245);
+  --selected-border: oklch(0.68 0.1 240);
+  --selected-foreground: oklch(0.9 0.045 238);
+  --overlay: oklch(0 0 0 / 0.7);
+  --success: oklch(0.72 0.15 150);
+  --rating: oklch(0.8 0.15 80);
+  --tomato: oklch(0.68 0.2 30);
+  --leaf: oklch(0.7 0.15 145);
+  --award: oklch(0.83 0.14 88);
+  --award-foreground: oklch(0.2 0.045 70);
+  --gem: oklch(0.74 0.13 292);
+  --gem-foreground: oklch(0.2 0.06 292);
+  --shadow-sm: 0 1px 3px 0 oklch(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 30px -5px oklch(0 0 0 / 0.5);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; border-color: var(--border); }
+body {
+  margin: 0; min-height: 100vh;
+  background: var(--background); color: var(--foreground);
+  font: 400 15px/1.5 var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  padding: env(safe-area-inset-top, 0px) 16px env(safe-area-inset-bottom, 0px);
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent); }
+
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 20px 56px; display: grid; gap: 24px; }
+
+/* Header */
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; letter-spacing: -0.02em; }
+.brand-mark { width: 30px; height: 30px; border-radius: var(--radius-md); background: var(--primary); color: var(--primary-foreground); display: grid; place-items: center; }
+.bar-actions { display: flex; gap: 8px; }
+.brand { min-width: 0; }
+.brand-text { white-space: nowrap; }
+
+/* Mode toggle: Crowd favourites / Hidden gems */
+.mode-wrap { position: relative; flex: none; }
+.mode { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--muted); }
+.mode button { width: 34px; height: 30px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 999px;
+  background: transparent; color: var(--muted-foreground); transition: background-color .15s, color .15s, box-shadow .15s; }
+.mode button svg { width: 17px; height: 17px; }
+.mode button:hover { color: var(--foreground); }
+.mode button[aria-pressed="true"] { background: var(--card); color: var(--foreground); box-shadow: var(--shadow-sm); }
+.mode button.mode-gem[aria-pressed="true"] { color: var(--gem); }
+.mode-hint { position: absolute; top: calc(100% + 8px); right: 0; z-index: 20; white-space: nowrap;
+  padding: 6px 10px; border-radius: var(--radius-md); background: var(--foreground); color: var(--background);
+  font-size: 0.75rem; font-weight: 600; box-shadow: var(--shadow-lg); pointer-events: none; animation: hint-in .25s ease both; }
+.mode-hint::before { content: ""; position: absolute; top: -4px; right: 17px; width: 8px; height: 8px; background: inherit; transform: rotate(45deg); border-radius: 1px; }
+@keyframes hint-in { from { opacity: 0; transform: translateY(-4px); } }
+
+.tagline { margin: 4px 0 0; color: var(--gem); font-weight: 600; font-size: 0.95rem; }
+.go-gem { display: none; }
+body.gems .go-gem { display: inline; }
+body.gems .go-reel { display: none; }
+body.gems #generate { background: var(--gem); color: var(--gem-foreground); }
+body.gems #generate:hover { background: color-mix(in oklch, var(--gem) 88%, var(--gem-foreground)); }
+
+.foot-meta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; }
+.foot-meta .version { margin-top: 0; }
+.foot-keys { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 6px; border: 0; background: none;
+  color: var(--muted-foreground); font-size: 0.75rem; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; border-radius: var(--radius-sm); }
+.foot-keys:hover { color: var(--foreground); }
+.foot-theme { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: var(--radius-md);
+  background: none; color: var(--muted-foreground); }
+.foot-theme:hover { background: var(--accent); color: var(--foreground); }
+.foot-theme svg { width: 15px; height: 15px; }
+
+/* Buttons (shadcn variants) */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; border-radius: var(--radius-md); font-size: 0.875rem; font-weight: 500; height: 36px; padding: 0 16px; border: 1px solid transparent; transition: background-color .15s, color .15s, opacity .15s; }
+.btn:disabled { opacity: .5; pointer-events: none; }
+.btn-primary { background: var(--primary); color: var(--primary-foreground); box-shadow: var(--shadow-xs); }
+.btn-primary:hover { background: color-mix(in oklch, var(--primary) 88%, var(--primary-foreground)); }
+.btn-outline { background: var(--background); color: var(--foreground); border-color: var(--input); box-shadow: var(--shadow-xs); }
+.btn-outline:hover { background: var(--accent); color: var(--accent-foreground); }
+.btn-ghost { background: transparent; }
+.btn-ghost:hover { background: var(--accent); }
+.btn-icon { width: 36px; padding: 0; }
+.btn-lg { height: 44px; padding: 0 24px; font-size: 0.95rem; font-weight: 600; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted-foreground); }
+.dot.ok { background: var(--success); }
+
+/* Hero */
+h1 { font-size: clamp(2rem, 5.5vw, 3rem); line-height: 1.05; letter-spacing: -0.04em; font-weight: 700; margin: 12px 0 8px; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted-foreground); max-width: 54ch; }
+
+/* Card */
+.card { background: var(--card); color: var(--card-foreground); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); }
+.filters { padding: 24px; display: grid; gap: 22px; }
+.field { display: grid; gap: 10px; min-width: 0; }
+.field-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.label { font-size: 0.875rem; font-weight: 600; }
+.hint { font-size: 0.8rem; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.picky-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 32px; align-items: start; padding: 6px 24px 24px; }
+
+/* "How picky?": collapsible card, header row always visible */
+.picky-head { display: flex; align-items: center; gap: 12px; padding: 10px 24px; }
+.picky-h { margin: 0; flex: 1; min-width: 0; font: inherit; }
+.picky-toggle { width: 100%; min-height: 44px; display: flex; align-items: center; gap: 12px; padding: 0; margin: 0;
+  background: none; border: 0; border-radius: var(--radius-md); text-align: left; color: inherit; }
+.picky-titles { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.picky-summary { min-width: 0; }
+.picky-chev { width: 18px; height: 18px; flex: none; color: var(--muted-foreground); transition: transform .25s ease; }
+.picky.open .picky-chev { transform: rotate(180deg); }
+.picky-toggle:hover .picky-chev { color: var(--foreground); }
+.picky-reset { flex: none; min-height: 44px; padding: 0 2px; font-size: 0.8rem; color: var(--muted-foreground); }
+.picky-reset:hover { color: var(--foreground); }
+.picky-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .28s cubic-bezier(.2,.8,.2,1); }
+.picky.open .picky-body { grid-template-rows: 1fr; }
+.picky-inner { min-height: 0; overflow: hidden; }
+
+/* Toggle chips (shadcn Toggle, outline) */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { height: 36px; padding: 0 12px; border-radius: var(--radius-md); border: 1px solid var(--input); background: var(--background); font-size: 0.875rem; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; box-shadow: var(--shadow-xs); transition: background-color .15s, color .15s, border-color .15s; }
+.chip:not([aria-pressed="true"]):hover { background: var(--accent); }
+.chip[aria-pressed="true"] { background: var(--selected); border-color: var(--selected-border); color: var(--selected-foreground); box-shadow: inset 0 0 0 1px var(--selected-border); font-weight: 600; }
+/* Reserve semi-bold width so chips never shift when selected */
+.chip-label { display: inline-flex; flex-direction: column; }
+.chip-label::after { content: attr(data-text); font-weight: 600; height: 0; visibility: hidden; overflow: hidden; }
+.chip[aria-pressed="true"]:hover { background: color-mix(in oklch, var(--selected) 80%, var(--selected-border)); }
+.chip:disabled { opacity: .5; cursor: not-allowed; }
+.chip img, .chip-mono { width: 20px; height: 20px; border-radius: 5px; flex: none; }
+.chip-mono { display: grid; place-items: center; background: var(--secondary); color: var(--muted-foreground); font: 700 .55rem/1 var(--font-sans); border: 1px solid var(--border); }
+.chip[aria-pressed="true"] .chip-mono { background: transparent; color: inherit; border-color: currentColor; }
+.chip-any svg { width: 11px; height: 11px; }
+
+/* Segmented (shadcn Tabs list) */
+.seg { display: inline-flex; width: fit-content; max-width: 100%; background: var(--muted); border-radius: var(--radius-lg); padding: 3px; gap: 2px; }
+.seg button { height: 30px; border: 1px solid transparent; background: transparent; border-radius: var(--radius-md); padding: 0 12px; font-size: 0.875rem; font-weight: 500; color: var(--muted-foreground); font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; flex: none; }
+.seg button[aria-pressed="true"] { background: var(--background); color: var(--foreground); box-shadow: var(--shadow-sm); }
+.seg button:disabled { opacity: .5; cursor: not-allowed; }
+.seg svg { width: 14px; height: 14px; }
+.seg-sm { padding: 2px; }
+.seg-sm button { height: 26px; padding: 0 10px; font-size: 0.8rem; }
+.chip-tag { font-size: 0.65rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 2px 5px; border-radius: 4px; background: var(--secondary); color: var(--muted-foreground); }
+.chip[aria-pressed="true"] .chip-tag { background: color-mix(in oklch, var(--selected-border) 25%, transparent); color: inherit; }
+.field-head { flex-wrap: wrap; }
+
+.go-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 20px; }
+.status { font-size: 0.875rem; color: var(--muted-foreground); min-width: 0; }
+.status.error { color: var(--destructive); font-weight: 500; }
+.link { color: var(--foreground); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; background: none; border: 0; padding: 0; font-size: inherit; }
+
+/* Results */
+/* Scroll target: header lands near the top, tiles above the sticky Roll button */
+.results { scroll-margin-top: calc(12px + env(safe-area-inset-top, 0px)); }
+.results-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; }
+.results-head .hint { white-space: nowrap; }
+.results-head h2 { margin: 0; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.02em; }
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px 16px; }
+
+/* Movie tile */
+.tile { display: grid; gap: 8px; align-content: start; min-width: 0; text-decoration: none; color: inherit; border-radius: var(--radius-lg); }
+.poster { position: relative; aspect-ratio: 2 / 3; max-width: 100%; border-radius: var(--radius-lg); overflow: hidden; background: var(--muted); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.poster img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s ease; }
+.tile:hover .poster img { transform: scale(1.03); }
+.poster-art { position: absolute; inset: 0; display: grid; align-content: space-between; padding: 12px; color: oklch(0.98 0.01 90);
+  background: radial-gradient(120% 80% at 80% 0%, oklch(0.62 0.13 var(--hue) / .9), transparent 60%), linear-gradient(165deg, oklch(0.42 0.09 var(--hue)), oklch(0.17 0.03 var(--hue))); }
+.poster-art .pa-year { font: 500 0.7rem/1 var(--font-mono); letter-spacing: .12em; opacity: .75; }
+.poster-art .pa-title { font-weight: 700; font-size: clamp(1rem, 2.4vw, 1.3rem); line-height: 1.05; letter-spacing: -0.03em; text-wrap: balance; }
+.poster-art svg { width: 22px; height: 22px; opacity: .55; }
+/* Oscars pill on the poster corner */
+.oscar-pill { position: absolute; top: 6px; right: 6px; z-index: 1; display: inline-flex; align-items: center; gap: 3px; height: 20px; padding: 0 7px 0 5px; border-radius: 999px;
+  font: 600 0.68rem/1 var(--font-sans); letter-spacing: .01em; white-space: nowrap; box-shadow: var(--shadow-sm);
+  background: var(--award); color: var(--award-foreground); border: 1px solid color-mix(in oklch, var(--award-foreground) 25%, transparent); }
+.oscar-pill.nom { background: color-mix(in oklch, var(--award-foreground) 82%, transparent); color: var(--award); border-color: color-mix(in oklch, var(--award) 55%, transparent); }
+.oscar-pill svg { width: 12px; height: 12px; flex: none; }
+.t-streams { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-height: 24px; margin-top: 6px; }
+.t-streams-note { font-size: 0.75rem; color: var(--muted-foreground); }
+.prov { width: 24px; height: 24px; border-radius: 6px; overflow: hidden; background: var(--muted); color: var(--muted-foreground); border: 1px solid var(--border); display: grid; place-items: center; font-size: .55rem; font-weight: 700; flex: none; }
+.prov-more { font: 600 .65rem/1 var(--font-mono); background: transparent; }
+.prov img { width: 100%; height: 100%; object-fit: cover; }
+.tile-body { display: grid; gap: 2px; padding-inline: 2px; }
+.scores { margin-top: 4px; }
+/* Titles always reserve two lines, so year · runtime, scores and services line up across a row */
+.t-title { margin: 0; font-size: 0.925rem; font-weight: 600; line-height: 1.25; min-height: calc(2 * 1.25em); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.t-sub { font-size: 0.8rem; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.scores { display: flex; gap: 12px; align-items: center; font: 500 0.8rem/1 var(--font-mono); font-variant-numeric: tabular-nums; }
+.score { display: inline-flex; align-items: center; gap: 5px; }
+.score svg { width: 14px; height: 14px; flex: none; }
+.score .na { color: var(--muted-foreground); }
+
+.empty { grid-column: 1 / -1; border: 1px dashed var(--border); border-radius: var(--radius-xl); padding: 48px 24px; text-align: center; color: var(--muted-foreground); font-size: 0.9rem; }
+.empty strong { display: block; color: var(--foreground); font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+
+.skel { background: var(--muted); border-radius: var(--radius-md); animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .5; } }
+
+/* Dialog */
+.overlay { position: fixed; inset: 0; background: var(--overlay); display: grid; place-items: center; padding: 16px; z-index: 50; }
+.dialog { width: min(480px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: var(--popover); color: var(--popover-foreground); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); padding: 24px; display: grid; gap: 18px; }
+.dialog h2 { margin: 0; font-size: 1.125rem; font-weight: 600; letter-spacing: -0.01em; }
+.dialog p { margin: 0; color: var(--muted-foreground); font-size: 0.875rem; }
+.dialog a { color: var(--foreground); font-weight: 500; }
+.key-field { display: grid; gap: 6px; }
+.key-field .hint a { color: var(--foreground); }
+.input { width: 100%; height: 36px; border: 1px solid var(--input); background: transparent; border-radius: var(--radius-md); padding: 0 12px; font: 500 0.8rem var(--font-mono); box-shadow: var(--shadow-xs); }
+.input:focus { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 40%, transparent); }
+.msg { font-size: 0.8rem; min-height: 1.2em; }
+.msg.error { color: var(--destructive); }
+.msg.ok { color: var(--success); }
+.dialog-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* Tile is a button */
+.tile { background: none; border: 0; padding: 0; text-align: left; width: 100%; font: inherit; cursor: pointer; }
+.tile:focus-visible { box-shadow: none; }
+.tile:focus-visible .poster { box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 60%, transparent); }
+
+
+/* "Streaming on": one summary row that opens a bottom sheet of services */
+.svc-row { width: 100%; min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 14px; text-align: left; color: inherit;
+  background: var(--background); border: 1px solid var(--input); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); transition: background-color .15s; }
+.svc-row:hover { background: var(--accent); }
+.svc-row:hover .picky-chev { color: var(--foreground); }
+.svc-row-main { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.svc-row-top { display: flex; align-items: baseline; gap: 8px; }
+.svc-country { font-size: 0.75rem; color: var(--muted-foreground); }
+.svc-row-sum { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.svc-sum { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.svc-minis { display: inline-flex; flex: none; }
+.svc-minis:empty { display: none; }
+.svc-minis > * { width: 20px; height: 20px; border-radius: 6px; box-shadow: 0 0 0 2px var(--background); flex: none; object-fit: cover; }
+.svc-minis > * + * { margin-left: -6px; }
+.svc-minis .chip-mono { font-size: .5rem; }
+.svcs { position: fixed; inset: 0; z-index: 40; background: var(--overlay); display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; transition: opacity .2s ease; }
+.svcs.open { opacity: 1; }
+.svcs-panel { position: relative; width: min(560px, 100%); max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); display: flex; flex-direction: column; overflow: hidden;
+  background: var(--popover); color: var(--popover-foreground); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);
+  transform: translateY(12px) scale(.98); transition: transform .22s cubic-bezier(.2,.8,.2,1); }
+.svcs.open .svcs-panel { transform: none; }
+.svcs-panel .d-grab { margin: 10px auto 0; }
+.svcs-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px 10px; }
+.svcs-title { margin: 0; font-size: 1.05rem; font-weight: 600; }
+.svcs-head .seg button { height: 34px; }
+.svcs-any { padding: 0 20px 6px; }
+.svcs-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 20px 14px; }
+.svcs-h { margin: 16px 0 8px; font-size: 0.72rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted-foreground); }
+.svcs-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.svc-tile, .svc-any { position: relative; border: 1px solid var(--input); background: var(--background); color: inherit; border-radius: var(--radius-md); box-shadow: var(--shadow-xs); font-weight: 500; transition: background-color .15s, border-color .15s; }
+.svc-tile:not([aria-pressed="true"]):hover, .svc-any:not([aria-pressed="true"]):hover { background: var(--accent); }
+.svc-tile { min-height: 44px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px 8px; font-size: 0.72rem; line-height: 1.2; text-align: center; }
+.svc-tile img, .svc-tile .chip-mono { width: 40px; height: 40px; border-radius: 10px; flex: none; }
+.svc-tile .chip-mono { font-size: .75rem; }
+.svc-name { display: block; max-width: 100%; overflow-wrap: anywhere; }
+.svc-tile .chip-tag { font-size: 0.58rem; padding: 1px 4px; }
+.svc-any { width: 100%; min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 14px 0 12px; font-size: 0.875rem; font-weight: 600; text-align: left; }
+.svc-tile[aria-pressed="true"], .svc-any[aria-pressed="true"] { background: var(--selected); border-color: var(--selected-border); color: var(--selected-foreground); box-shadow: inset 0 0 0 1px var(--selected-border); font-weight: 600; }
+.svc-tile[aria-pressed="true"] .chip-mono, .svc-any[aria-pressed="true"] .chip-mono { background: transparent; color: inherit; border-color: currentColor; }
+.svc-tile[aria-pressed="true"] .chip-tag { background: color-mix(in oklch, var(--selected-border) 25%, transparent); color: inherit; }
+.svc-check { display: none; position: absolute; top: 4px; right: 4px; width: 16px; height: 16px; border-radius: 50%; background: var(--selected-foreground); color: var(--selected); place-items: center; }
+.svc-any .svc-check { top: 50%; right: 12px; transform: translateY(-50%); }
+.svc-check svg { width: 10px; height: 10px; }
+[aria-pressed="true"] > .svc-check { display: grid; }
+.svcs-foot { display: flex; align-items: center; gap: 14px; padding: 12px 20px calc(14px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border); background: var(--popover); }
+.svcs-done { flex: 1; min-width: 0; }
+.svcs-clear { min-height: 44px; padding: 0 4px; font-size: 0.875rem; color: var(--muted-foreground); }
+.d-streams .d-tag { display: block; margin-top: 3px; text-align: center; font-size: .58rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted-foreground); }
+@media (max-width: 620px) {
+  .svcs { align-items: flex-end; padding: 0; }
+  .svcs-panel { width: 100%; max-height: 88vh; max-height: 88dvh; border-radius: 20px 20px 0 0; border-bottom: 0; transform: translateY(100%); }
+  .svcs.open .svcs-panel { transform: none; }
+  .svcs-head { padding: 10px 16px 8px; }
+  .svcs-any, .svcs-body, .svcs-foot { padding-left: 16px; padding-right: 16px; }
+  .svcs-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .svcs, .svcs-panel { transition: none; } }
+
+/* Details: bottom sheet on phones, centred dialog on larger screens */
+.details { position: fixed; inset: 0; z-index: 40; background: var(--overlay); display: flex; align-items: center; justify-content: center; padding: 24px;
+  opacity: 0; transition: opacity .2s ease; }
+.details.open { opacity: 1; }
+.details-panel { position: relative; width: min(560px, 100%); max-height: calc(100vh - 48px); overflow-y: auto; overscroll-behavior: contain;
+  background: var(--popover); color: var(--popover-foreground); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);
+  padding: 24px; display: grid; gap: 18px; transform: translateY(12px) scale(.98); transition: transform .22s cubic-bezier(.2,.8,.2,1); }
+.details.open .details-panel { transform: none; }
+.d-grab { display: none; }
+.d-close { position: absolute; top: 12px; right: 12px; }
+.d-share { position: absolute; top: 12px; right: 52px; }
+.d-share svg { width: 18px; height: 18px; }
+.d-toast { position: absolute; top: 52px; right: 40px; z-index: 2; padding: 4px 10px; border-radius: var(--radius-md); background: var(--foreground); color: var(--background);
+  font-size: 0.75rem; font-weight: 600; box-shadow: var(--shadow-lg); pointer-events: none; }
+.d-head { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 16px; align-items: start; }
+.d-title { padding-right: 76px; }   /* clear the share and close buttons */
+.d-poster { border-radius: var(--radius-md); }
+.d-poster .poster-art { padding: 8px; }
+.d-poster .pa-title { font-size: 0.85rem; }
+.d-poster .poster-art svg { width: 16px; height: 16px; }
+.d-titles { display: grid; gap: 6px; min-width: 0; }
+.d-title { margin: 0; font-size: 1.3rem; line-height: 1.15; font-weight: 700; letter-spacing: -0.025em; text-wrap: balance; }
+.d-genres { display: flex; flex-wrap: wrap; gap: 6px; }
+.badge { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: var(--radius-sm); background: var(--secondary); color: var(--secondary-foreground); font-size: 0.75rem; font-weight: 500; }
+.d-scores { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 4px; }
+.d-score { display: flex; align-items: center; gap: 8px; }
+.d-score svg { width: 20px; height: 20px; flex: none; }
+.award-ico { display: inline-flex; color: var(--award); }
+.oscar-ico, .poster img.oscar-ico, .tile:hover .poster img.oscar-ico { height: 16px; width: auto; object-fit: contain; transform: none; transition: none; display: block; flex: none; }   /* beats ".poster img", which would stretch it */
+.oscar-pill .oscar-ico, .poster .oscar-pill img.oscar-ico { height: 16px; }
+.d-score .oscar-ico { height: 26px; }
+:root[data-theme="dark"] .oscar-ico { filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 .5px #fff); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .oscar-ico { filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 .5px #fff); } }
+
+.d-score b.d-award { font-family: var(--font-sans); letter-spacing: -0.01em; }
+.d-score span { display: grid; line-height: 1.1; }
+.d-score b { font: 600 1rem/1.1 var(--font-mono); font-variant-numeric: tabular-nums; }
+.d-score small { font-size: 0.7rem; color: var(--muted-foreground); }
+.d-score .na { color: var(--muted-foreground); }
+.d-overview { margin: 0; font-size: 0.95rem; line-height: 1.6; max-width: 62ch; }
+.d-about { display: grid; gap: 4px; }
+.d-tmdb { justify-self: start; display: inline-flex; align-items: center; gap: 5px; min-height: 36px; font-size: 0.85rem; }
+.d-tmdb .ext { width: 13px; height: 13px; color: var(--muted-foreground); }
+.d-section { display: grid; gap: 8px; }
+.d-streams { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.d-streams li { display: flex; flex-direction: column; align-items: center; }
+/* Services: icon-only tap targets (48px), name in the tooltip and accessible label */
+.d-svc { display: grid; place-items: center; width: 48px; height: 48px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  color: inherit; text-decoration: none; background: var(--popover); box-shadow: var(--shadow-xs); transition: transform .15s, border-color .15s, box-shadow .15s; }
+.d-svc:hover { border-color: var(--selected-border); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+.d-svc:focus-visible { border-color: var(--ring); }
+.d-all { font-size: 0.8rem; justify-self: start; display: inline-flex; align-items: center; min-height: 36px; }
+.d-streams img, .d-streams .prov { width: 40px; height: 40px; border-radius: 8px; box-shadow: none; display: block; }
+.d-streams .prov { display: grid; place-items: center; font-size: 0.75rem; border: 0; }
+
+@media (max-width: 620px) {
+  .details { align-items: flex-end; padding: 0; }
+  .details-panel { width: 100%; max-height: 88vh; border-radius: 20px 20px 0 0; border-bottom: 0;
+    padding: 10px 16px calc(20px + env(safe-area-inset-bottom, 0px)); gap: 16px; transform: translateY(100%); }
+  .d-grab { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--border); margin: 0 auto 2px; }
+  .d-close { top: 8px; right: 8px; }
+  .d-share { top: 8px; right: 48px; }
+  .d-toast { top: 48px; right: 36px; }
+  .d-title { padding-right: 72px; }
+  .d-head { grid-template-columns: 96px minmax(0, 1fr); gap: 14px; }
+  .d-title { font-size: 1.15rem; }
+}
+
+footer { text-align: center; font-size: 0.75rem; color: var(--muted-foreground); display: grid; gap: 4px; }
+footer a { color: inherit; }
+.version { font: 500 0.7rem/1 var(--font-mono); letter-spacing: .04em; opacity: .8; margin-top: 6px; }
+
+@media (max-width: 900px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) {
+  .wrap { padding-block: 12px 40px; gap: 18px; }
+  .filters { padding: 16px; gap: 18px; }
+  .picky-grid { grid-template-columns: 1fr; gap: 18px; padding: 4px 16px 16px; }
+  .picky-head { padding: 8px 16px; gap: 8px; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 12px; }
+  .go-row .btn-lg { width: 100%; }
+  .status { width: 100%; text-align: center; }
+  .brand-text small { display: none; }
+}
+@media (max-width: 620px) {
+  /* Keep "Roll the reel" on the first iPhone screen */
+  h1 { font-size: 1.6rem; margin: 6px 0 0; }
+  .lede { display: none; }
+  .chips { gap: 6px; }
+  .chip { height: 34px; padding: 0 10px; }
+  .field { gap: 8px; }
+  .go-row { position: sticky; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 5; border-top: 0; padding-top: 0; }
+  .go-row .btn-lg { box-shadow: var(--shadow-lg); }
+  .go-row .status:empty { display: none; }
+}
+@media (max-width: 400px) {
+  .seg button { padding: 0 9px; gap: 4px; }
+  .seg svg { width: 13px; height: 13px; }
+}
+/* Reel roll: spins while picks load, always stopping on a full turn */
+.reel-spin { transform-box: view-box; transform-origin: 10.5px 10.5px; }
+.reel-spark { transform-box: fill-box; transform-origin: center; }
+.rolling .brand .reel-spin, .skel-reel .reel-spin { animation: reel-roll .7s cubic-bezier(.45,.05,.55,.95) infinite; }
+.rolling .brand .reel-spark, .skel-reel .reel-spark { animation: reel-twinkle .7s ease-in-out infinite; }
+/* Loading placeholder: the reel rolls in the middle of each empty poster */
+.poster.skel-reel { display: grid; place-items: center; border: 0; color: color-mix(in oklch, var(--muted-foreground) 70%, transparent); }
+.skel-reel svg { width: 38%; height: auto; max-width: 64px; }
+@keyframes reel-roll { to { transform: rotate(360deg); } }
+@keyframes reel-twinkle { 0%, 100% { transform: scale(1) rotate(0); opacity: 1; } 50% { transform: scale(.55) rotate(45deg); opacity: .6; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <div class="bar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g class="reel-spin"><path fill-rule="evenodd" d="M2.50 10.50a8 8 0 1 0 16 0a8 8 0 1 0 -16 0ZM8.70 6.10a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM12.88 9.14a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM11.29 14.06a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM6.11 14.06a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM4.52 9.14a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM9.60 10.50a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0Z"/></g><rect x="10.5" y="17" width="11.5" height="3" rx="1.5"/><path class="reel-spark" d="M20 .8Q20.6 3.4 23.2 4 20.6 4.6 20 7.2 19.4 4.6 16.8 4 19.4 3.4 20 .8Z"/></svg>
+      </span>
+      <span class="brand-text">GoodReel Pick</span>
+    </div>
+    <div class="mode-wrap">
+        <div class="mode" id="mode" role="group" aria-label="Mode">
+          <button type="button" data-mode="crowd" aria-pressed="true" aria-label="Crowd favourites" title="Crowd favourites">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M2.50 10.50a8 8 0 1 0 16 0a8 8 0 1 0 -16 0ZM8.70 6.10a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM12.88 9.14a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM11.29 14.06a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM6.11 14.06a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM4.52 9.14a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM9.60 10.50a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0Z"/><rect x="10.5" y="17" width="11.5" height="3" rx="1.5"/></svg>
+          </button>
+          <button type="button" data-mode="gems" aria-pressed="false" aria-label="Hidden gems" title="Hidden gems" class="mode-gem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11l4 5.5L12 20.5 2.5 9z"/><path d="M2.5 9h19M9.5 3.5 12 9l2.5-5.5M12 9v11.5"/></svg>
+          </button>
+        </div>
+        <div class="mode-hint" id="modeHint" role="status" hidden>New: Hidden gems</div>
+      </div>
+  </div>
+
+  <header>
+    <h1 id="headline">Four good reels for tonight.</h1>
+    <p class="tagline" id="tagline" hidden>Critics loved them. Few people found them.</p>
+    <p class="lede">Choose a mood, your services and how picky to be. We’ll pull four well-rated movies streaming in <span id="regionName">Canada</span> right now.</p>
+  </header>
+
+  <section class="card filters" aria-label="Filters">
+    <div class="field">
+      <div class="field-head"><span class="label" id="genreLabel">Mood</span><span class="hint" id="genreCount">Up to 3</span></div>
+      <div class="chips" id="genres" role="group" aria-labelledby="genreLabel"></div>
+    </div>
+    <div class="field">
+      <button type="button" class="svc-row" id="svcRow" aria-haspopup="dialog">
+        <span class="svc-row-main">
+          <span class="svc-row-top"><span class="label">Streaming on</span><span class="svc-country" id="svcCountry"></span></span>
+          <span class="svc-row-sum"><span class="svc-minis" id="svcMinis" aria-hidden="true"></span><span class="hint svc-sum" id="svcSum">Any service</span></span>
+        </span>
+        <svg class="picky-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+    </div>
+    <div class="go-row">
+      <button class="btn btn-primary btn-lg" id="generate" type="button">
+        <svg class="go-reel" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g><path fill-rule="evenodd" d="M2.50 10.50a8 8 0 1 0 16 0a8 8 0 1 0 -16 0ZM8.70 6.10a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM12.88 9.14a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM11.29 14.06a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM6.11 14.06a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM4.52 9.14a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM9.60 10.50a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0Z"/></g><rect x="10.5" y="17" width="11.5" height="3" rx="1.5"/><path d="M20 .8Q20.6 3.4 23.2 4 20.6 4.6 20 7.2 19.4 4.6 16.8 4 19.4 3.4 20 .8Z"/></svg>
+        <svg class="go-gem" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11l4 5.5L12 20.5 2.5 9z"/><path d="M2.5 9h19M9.5 3.5 12 9l2.5-5.5M12 9v11.5"/></svg>
+        <span id="goLabel">Roll the reel</span>
+      </button>
+      <span class="status" id="status" role="status" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <section class="results" id="resultsSection" aria-labelledby="resultsTitle" style="display:grid;gap:14px">
+    <div class="results-head"><h2 id="resultsTitle">Picks</h2><span class="hint" id="resultMeta"></span></div>
+    <div class="grid" id="results">
+      <div class="empty"><strong>Your four picks land here</strong>Pick a mood or two, then roll the reel.</div>
+    </div>
+  </section>
+
+  <section class="card picky" id="picky" aria-labelledby="refineTitle">
+    <div class="picky-head">
+      <h2 class="picky-h">
+        <button type="button" class="picky-toggle" id="pickyToggle" aria-expanded="false" aria-controls="pickyBody">
+          <span class="picky-titles"><span class="label" id="refineTitle">How picky?</span><span class="hint picky-summary" id="pickySummary"></span></span>
+          <svg class="picky-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+      </h2>
+      <button type="button" class="link picky-reset" id="pickyReset" hidden>Reset</button>
+    </div>
+    <div class="picky-body" id="pickyBody" inert>
+    <div class="picky-inner">
+    <div class="picky-grid">
+      <div class="field">
+        <div class="field-head"><span class="label" id="ratingLabel">TMDB rating</span></div>
+        <div class="seg" id="rating" role="group" aria-labelledby="ratingLabel"></div>
+      </div>
+      <div class="field">
+        <div class="field-head"><span class="label" id="rtLabel">Rotten Tomatoes</span><span class="hint" id="rtHint"></span></div>
+        <div class="seg" id="rt" role="group" aria-labelledby="rtLabel"></div>
+      </div>
+      <div class="field">
+        <div class="field-head"><span class="label" id="awardsLabel">Awards</span><span class="hint" id="awardsHint"></span></div>
+        <div class="seg" id="awards" role="group" aria-labelledby="awardsLabel"></div>
+      </div>
+      <div class="field">
+        <div class="field-head"><span class="label" id="eraLabel">Era</span><span class="hint" id="eraHint"></span></div>
+        <div class="seg" id="era" role="group" aria-labelledby="eraLabel"></div>
+      </div>
+      <div class="field">
+        <div class="field-head"><span class="label" id="timeLabel">Time tonight</span></div>
+        <div class="seg" id="time" role="group" aria-labelledby="timeLabel"></div>
+      </div>
+      <div class="field">
+        <div class="field-head"><span class="label" id="langLabel">Language</span><span class="hint">International = not originally in English</span></div>
+        <div class="seg" id="lang" role="group" aria-labelledby="langLabel"></div>
+      </div>
+    </div>
+    </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Movie data from <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>, streaming from JustWatch, scores from <a href="https://www.omdbapi.com/" target="_blank" rel="noopener">OMDb</a>. Not endorsed by TMDB.</span>
+    <span class="foot-meta">
+      <button type="button" class="foot-keys" id="keyBtn"><span class="dot" id="keyDot"></span>API keys</button>
+      <span aria-hidden="true">·</span>
+      <button type="button" class="foot-theme" id="themeBtn" aria-label="Theme"></button>
+      <span aria-hidden="true">·</span>
+      <span class="version">GoodReel Pick v3.2</span>
+    </span>
+  </footer>
+</main>
+
+<div class="details" id="details" hidden>
+  <div class="details-panel" id="detailsPanel" role="dialog" aria-modal="true" aria-labelledby="detailsTitle"></div>
+</div>
+
+<div class="svcs" id="svcs" hidden>
+  <div class="svcs-panel" id="svcsPanel" role="dialog" aria-modal="true" aria-labelledby="svcsTitle">
+    <div class="d-grab" aria-hidden="true"></div>
+    <div class="svcs-head">
+      <h2 class="svcs-title" id="svcsTitle">Streaming on</h2>
+      <div class="seg" id="region" role="group" aria-label="Country"></div>
+    </div>
+    <div class="svcs-any" id="svcsAny"></div>
+    <div class="svcs-body" id="svcsBody"></div>
+    <div class="svcs-foot">
+      <button type="button" class="link svcs-clear" id="svcsClear" hidden>Clear</button>
+      <button type="button" class="btn btn-primary btn-lg svcs-done" id="svcsDone">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="sheet" hidden>
+  <form class="dialog" id="keyForm" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div style="display:grid;gap:6px">
+      <h2 id="sheetTitle">Data keys</h2>
+      <p>Keys are tested, then saved in this browser only.</p>
+    </div>
+    <div class="key-field">
+      <label class="label" for="tmdbInput">TMDB token</label>
+      <input class="input" id="tmdbInput" type="password" autocomplete="off" spellcheck="false">
+      <span class="hint">Movies, posters and streaming. Get one at <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org/settings/api</a>.</span>
+    </div>
+    <div class="key-field">
+      <label class="label" for="omdbInput">OMDb key <span class="hint">(optional)</span></label>
+      <input class="input" id="omdbInput" type="password" autocomplete="off" spellcheck="false" placeholder="8-character key">
+      <span class="hint">Adds Rotten Tomatoes scores and Oscars. Free at <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noopener">omdbapi.com/apikey.aspx</a>.</span>
+    </div>
+    <div class="msg" id="keyMsg" role="status"></div>
+    <div class="dialog-actions">
+      <button class="btn btn-ghost" type="button" id="keyCancel">Cancel</button>
+      <button class="btn btn-primary" type="submit" id="keySave">Save keys</button>
+    </div>
+  </form>
+</div>
+
+<script>
+/* ---------------------------------------------------------------
+   Keys for your own deployment. Leave empty to have each visitor
+   paste their own in "API keys" (footer). Anything here is visible in page source.
+---------------------------------------------------------------- */
+const TMDB_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhNTBlNDVmNzYzNTE2ZDhhNThhYThkZTRjZWIwMjAxMyIsIm5iZiI6MTc5MTA0MTMxMy4wOCwic3ViIjoiNmFjMTFmMjEzN2ZlNzcxMGE1ZDFmZjdjIiwic2NvcGVzIjpbImFwaV9yZWFkIl0sInZlcnNpb24iOjF9.5fCteP0K-ULI3SyoCNFgRps5_IVIKKYQK7DOMgfzGJU";
+const OMDB_KEY = "dd71fd77";
+
+const API = "https://api.themoviedb.org/3";
+const OMDB = "https://www.omdbapi.com/";
+const IMG = "https://image.tmdb.org/t/p/";
+let REGION = "CA";
+const S = { tmdb: "goodreel.tmdbKey", omdb: "goodreel.omdbKey", prefs: "goodreel.prefs", theme: "goodreel.theme",
+  omdbCache: "goodreel.omdbCache.v3",   // session cache of { rt, oscar, meta }
+  gemsHint: "goodreel.hint.gems" };
+/* v2.1–v3.0 saved the OMDb key under the cache's name by mistake. Move it back. */
+try {
+  const misplaced = localStorage.getItem("goodreel.omdbCache.v2");
+  if (misplaced && !localStorage.getItem(S.omdb) && /^[a-z0-9]{6,12}$/i.test(misplaced)) localStorage.setItem(S.omdb, misplaced);
+  localStorage.removeItem("goodreel.omdbCache.v2");
+} catch {}
+
+const GENRES = [
+  ["Action", 28], ["Comedy", 35], ["Drama", 18], ["Sci‑Fi", 878], ["Thriller", 53],
+  ["Mystery", 9648], ["Animation", 16], ["Romance", 10749], ["Adventure", 12], ["Family", 10751]
+];
+/* Services are matched by name against TMDB's live list for each country.
+   `ids` are fallbacks used only until that list loads.
+   `search` opens the service's own search for a title ({q} = title, {cc} = ca/us).
+   null means no reliable search URL, so the tap goes to TMDB's watch page instead. */
+const SERVICES = {
+  netflix:   { name: "Netflix",     group: "subscription", match: /^netflix( (basic|standard) with ads)?$/i, ids: [8, 1796], search: "https://www.netflix.com/search?q={q}" },
+  prime:     { name: "Prime Video", group: "subscription", match: /^(amazon )?prime video( with ads)?$/i,   ids: [9, 119],  search: "https://www.primevideo.com/search?phrase={q}" },
+  disney:    { name: "Disney+",     group: "subscription", match: /^disney( plus|\+)$/i,                    ids: [337],     search: "https://www.disneyplus.com/search?q={q}" },
+  crave:     { name: "Crave",       group: "subscription", match: /^crave$/i,                                ids: [230],     search: null },  // crave.ca/en/search drops the query and redirects home
+  apple:     { name: "Apple TV",    group: "subscription", match: /^apple tv( ?\+| plus)$/i,                ids: [350],     search: "https://tv.apple.com/{cc}/search?term={q}" },
+  paramount: { name: "Paramount+",  group: "subscription", match: /^paramount( plus|\+)( (essential|premium|with showtime))?$/i, ids: [531], search: "https://www.paramountplus.com/search/?q={q}" },
+  hbomax:    { name: "HBO Max",     group: "subscription", match: /^(hbo max|max)$/i,                        ids: [1899, 384], search: "https://play.hbomax.com/search?q={q}" },
+  hulu:      { name: "Hulu",        group: "subscription", match: /^hulu$/i,                                 ids: [15],        search: "https://www.hulu.com/search?q={q}" },
+  peacock:   { name: "Peacock",     group: "subscription", match: /^peacock( premium( plus)?)?$/i,           ids: [386, 387],  search: "https://www.peacocktv.com/watch/search?q={q}" },
+  cbcgem:    { name: "CBC Gem",     group: "free", match: /^cbc gem$/i,                              ids: [314], search: "https://gem.cbc.ca/search?q={q}" },
+  tubi:      { name: "Tubi",        group: "free", match: /^tubi( tv)?$/i,                           ids: [73],  search: "https://tubitv.com/search/{q}" },
+  pluto:     { name: "Pluto TV",    group: "free", match: /^pluto tv$/i,                             ids: [],    search: null },
+  plex:      { name: "Plex",        group: "free", match: /^plex( channel)?$/i,                      ids: [],    search: null },
+  nfb:       { name: "NFB",         group: "free", match: /^(nfb|national film board( of canada)?)$/i, ids: [], search: null },
+  hoopla:    { name: "Hoopla",      group: "library", match: /^hoopla$/i,                         ids: [],    search: "https://www.hoopladigital.com/search?q={q}" },
+  kanopy:    { name: "Kanopy",      group: "library", match: /^kanopy$/i,                         ids: [],    search: null },
+  criterion: { name: "Criterion Channel", group: "specialty", match: /^criterion channel$/i,    ids: [],    search: null },
+  mubi:      { name: "MUBI",        group: "specialty", match: /^mubi( (amazon|apple tv|prime video|roku premium) channel)?$/i,                  ids: [],    search: null },
+  shudder:   { name: "Shudder",     group: "specialty", match: /^shudder( (amazon|apple tv|prime video|roku premium) channel)?$/i,               ids: [],    search: null },
+  amcplus:   { name: "AMC+",        group: "specialty", match: /^amc( plus|\+)( (amazon|apple tv|prime video|roku premium) channel)?$/i,         ids: [],    search: null },
+  britbox:   { name: "BritBox",     group: "specialty", match: /^britbox( (amazon|apple tv|prime video|roku premium) channel)?$/i,               ids: [],    search: null },
+  acorn:     { name: "Acorn TV",    group: "specialty", match: /^acorn tv( (amazon|apple tv|prime video|roku premium) channel)?$/i,              ids: [],    search: null },
+  illico:    { name: "Club illico", group: "specialty", match: /^club illico$/i,                 ids: [],    search: null },
+  toutv:     { name: "Tou.tv",      group: "specialty", match: /^(ici )?tou\.?tv( extra)?$/i,    ids: [],    search: null }
+};
+/* How the sheet groups services, in order. The tag is the small label on the tile. */
+const GROUPS = [
+  ["subscription", "Subscription", ""],
+  ["free", "Free with ads", "Free"],
+  ["library", "Free with a library card", "Library card"],
+  ["specialty", "Specialty", ""]
+];
+const serviceTag = k => GROUPS.find(g => g[0] === SERVICES[k]?.group)?.[2] || "";
+const REGIONS = {
+  CA: { label: "Canada", flag: "🇨🇦", phrase: "Canada", lang: "en-CA",
+        services: ["netflix", "prime", "disney", "crave", "apple", "paramount", "cbcgem", "tubi"] },
+  US: { label: "US", flag: "🇺🇸", phrase: "the US", lang: "en-US",
+        services: ["netflix", "prime", "hbomax", "hulu", "peacock", "apple", "tubi"] }
+};
+const LANG = () => REGIONS[REGION].lang;
+const resolved = {};   // region -> { serviceKey: { ids, logo } }
+for (const r of ["CA", "US"]) { try { const c = JSON.parse(localStorage.getItem("goodreel.services." + r) || "null"); if (c) resolved[r] = c; } catch {} }
+const svc = key => resolved[REGION]?.[key] || { ids: SERVICES[key].ids, logo: null };
+/* The services to offer for a country, in sheet order. Once TMDB's live list has loaded, only services found
+   in it appear (so Hulu and Peacock stay out of Canada). Until then, or offline, the original short list stands in.
+   Within a group: TMDB's display_priority where known, else the order they're declared in. */
+function availableKeys(r = REGION) {
+  const live = resolved[r], order = Object.keys(SERVICES);
+  const keys = live ? order.filter(k => live[k]) : REGIONS[r].services.slice();
+  const gi = k => GROUPS.findIndex(g => g[0] === SERVICES[k].group);
+  const pr = k => live?.[k]?.prio ?? Infinity;
+  return keys.sort((a, b) => gi(a) - gi(b) || (pr(a) === pr(b) ? order.indexOf(a) - order.indexOf(b) : pr(a) - pr(b)));
+}
+const selectedIds = () => new Set([...selProviders].flatMap(k => svc(k).ids));
+const RATINGS = [6.5, 7, 7.5, 8];
+const PICK_COUNT = 4;   // movies per roll
+
+/* Shown when TMDB can't be reached. Scores are approximate and kept static. */
+const CLASSICS = [
+  { id: 238, title: "The Godfather", release_date: "1972", runtime: 175, vote_average: 8.7, rt: 97, oscar: { status: "won", count: 3 }, hue: 40, genres: ["Crime", "Drama"],
+    overview: "The aging head of a New York crime family plans to hand his empire to an heir. After an attempt on his life, his youngest son Michael, who wanted no part of the business, is pulled in and slowly becomes its most ruthless leader." },
+  { id: 278, title: "The Shawshank Redemption", release_date: "1994", runtime: 142, vote_average: 8.7, rt: 89, oscar: { status: "nominated", count: 7 }, hue: 230, genres: ["Drama", "Crime"],
+    overview: "Banker Andy Dufresne is sent to Shawshank prison for a double murder he insists he didn’t commit. Over two decades behind bars, his quiet resolve and his friendship with fellow inmate Red become a lesson in patience and hope." },
+  { id: 122, title: "The Lord of the Rings: The Return of the King", release_date: "2003", runtime: 201, vote_average: 8.5, rt: 94, oscar: { status: "won", count: 11 }, hue: 70, genres: ["Adventure", "Fantasy", "Action"],
+    overview: "As Sauron’s armies close in on the city of Minas Tirith, Aragorn rallies the free peoples of Middle-earth for one last stand. Meanwhile, Frodo and Sam struggle across Mordor to destroy the One Ring before it destroys them." },
+  { id: 289, title: "Casablanca", release_date: "1942", runtime: 102, vote_average: 8.2, rt: 99, oscar: { status: "won", count: 3 }, hue: 15, genres: ["Drama", "Romance"],
+    overview: "In wartime Morocco, cynical nightclub owner Rick Blaine is confronted by the woman who broke his heart. She needs his help to get her husband, a resistance leader, out of the country, and Rick must choose between love and doing what’s right." }
+].map(m => ({ ...m, classic: true }));
+const RT_LEVELS = [0, 70, 80];
+const AWARD_LEVELS = [["any", "Any"], ["nom", "Nominated"], ["won", "Won"]];   // "nom" = at least nominated
+const TIMES = [[0, "Any"], [120, "Under 2h"], [90, "Under 90m"]];
+const LANG_LEVELS = [["any", "Any"], ["intl", "International"]];
+/* Hidden gems: critics loved them, few people found them */
+const GEMS = { voteMin: 50, voteMax: 1500, pages: 20, meta: 75, rt: 85 };
+const isGem = m => (m.meta != null && m.meta >= GEMS.meta) || (m.rt != null && m.rt >= GEMS.rt);
+/* "Korean", "French"… for non-English originals, in the current UI language */
+function langName(code) {
+  if (!code || code === "en") return "";
+  try { return new Intl.DisplayNames([LANG()], { type: "language" }).of(code) || code; } catch { return code; }
+}
+/* Release eras roll forward with the calendar and never overlap */
+const Y = new Date().getFullYear();
+const ERAS = {
+  any:       { label: "Any",               hint: "" },
+  fresh:     { label: `${Y - 5}+`,         hint: "", gte: `${Y - 5}-01-01` },
+  modern:    { label: `2000–${Y - 6}`,     hint: "", gte: "2000-01-01", lte: `${Y - 6}-12-31` },
+  throwback: { label: "Pre-2000",          hint: "", lte: "1999-12-31" }
+};
+
+const ICON = {
+  reel: `<svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M2.50 10.50a8 8 0 1 0 16 0a8 8 0 1 0 -16 0ZM8.70 6.10a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM12.88 9.14a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM11.29 14.06a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM6.11 14.06a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM4.52 9.14a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM9.60 10.50a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0Z"/><rect x="10.5" y="17" width="11.5" height="3" rx="1.5"/></svg>`,
+  star: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="var(--rating)" d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.2 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>`,
+  gem: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11l4 5.5L12 20.5 2.5 9z"/><path d="M2.5 9h19M9.5 3.5 12 9l2.5-5.5M12 9v11.5"/></svg>`,
+  meta: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4.5" fill="var(--success)"/><path d="M7 16.5V8l5 5.5L17 8v8.5" fill="none" stroke="var(--background)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  trophy: `<img class="oscar-ico" src="data:image/png;base64,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" width="5" height="16" alt="" aria-hidden="true">`,
+  ext: `<svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>`,
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`,
+  share: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>`,
+  tomato: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="8.5" fill="var(--tomato)"/><path fill="var(--leaf)" d="M12 6.2c-1.6-2-3.9-2.4-5.6-1.6 1.4.4 2.4 1.2 3 2.4-1.5-.2-3 .3-3.9 1.3 2-.2 3.9.2 5.2 1 .3-1 .8-1.9 1.3-2.4.5.5 1 1.4 1.3 2.4 1.3-.8 3.2-1.2 5.2-1-.9-1-2.4-1.5-3.9-1.3.6-1.2 1.6-2 3-2.4-1.7-.8-4-.4-5.6 1.6z"/></svg>`,
+  sun: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`,
+  moon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z"/></svg>`,
+  system: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>`
+};
+
+const $ = id => document.getElementById(id);
+const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { v == null || v === "" ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} }
+};
+
+/* ---------- Theme ---------- */
+const THEMES = ["system", "light", "dark"];
+let theme = THEMES.includes(store.get(S.theme)) ? store.get(S.theme) : "system";
+function applyTheme() {
+  if (theme === "system") delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = theme;
+  $("themeBtn").innerHTML = ICON[{ system: "system", light: "sun", dark: "moon" }[theme]];
+  $("themeBtn").setAttribute("aria-label", `Theme: ${theme}. Switch theme`);
+  $("themeBtn").title = `Theme: ${theme[0].toUpperCase() + theme.slice(1)}`;
+}
+$("themeBtn").addEventListener("click", () => {
+  theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+  store.set(S.theme, theme === "system" ? null : theme);
+  applyTheme();
+});
+
+/* ---------- Prefs ---------- */
+let prefs = { genres: [], providersBy: {}, region: "CA", rating: 7, rt: 0, awards: "any", era: "any", time: 0, lang: "any", mode: "crowd" };
+try { prefs = { ...prefs, ...JSON.parse(store.get(S.prefs) || "{}") }; } catch {}
+const selGenres = new Set(prefs.genres);
+if (prefs.region in REGIONS) REGION = prefs.region;
+const pickedFor = r => { const ok = availableKeys(r); return (prefs.providersBy?.[r] || []).filter(k => ok.includes(k)); };   // services that no longer exist here are dropped quietly
+let selProviders = new Set(pickedFor(REGION));
+let minRating = RATINGS.includes(prefs.rating) ? prefs.rating : 7;
+let minRT = RT_LEVELS.includes(prefs.rt) ? prefs.rt : 0;
+let awardsLevel = AWARD_LEVELS.some(([v]) => v === prefs.awards) ? prefs.awards : "any";   // v2.0 prefs have none → "any"
+let era = prefs.era in ERAS ? prefs.era : "any";
+let maxRuntime = TIMES.some(([v]) => v === prefs.time) ? prefs.time : 0;
+let langFilter = LANG_LEVELS.some(([v]) => v === prefs.lang) ? prefs.lang : "any";   // "intl" = original language isn't English
+let mode = prefs.mode === "gems" ? "gems" : "crowd";                                 // Crowd favourites (default) or Hidden gems
+const seen = new Set();
+let current = [];        // movies on screen, for the details sheet
+const savePrefs = () => {
+  prefs.providersBy = { ...(prefs.providersBy || {}), [REGION]: [...selProviders] };
+  store.set(S.prefs, JSON.stringify({ genres: [...selGenres], providersBy: prefs.providersBy, region: REGION, rating: minRating, rt: minRT, awards: awardsLevel, era, time: maxRuntime, lang: langFilter, mode }));
+};
+
+/* ---------- Keys & requests ---------- */
+const tmdbKey = () => (store.get(S.tmdb) || TMDB_TOKEN || "").trim();
+const omdbKey = () => (store.get(S.omdb) || OMDB_KEY || "").trim();
+const isBearer = k => k.startsWith("eyJ") || k.length > 40;
+class AuthError extends Error {}
+class OmdbError extends Error {}
+let omdbProblem = null;   // set when OMDb fails, so one bad key doesn’t sink a whole roll
+
+function networkError(service) {
+  const framed = (() => { try { return window.self !== window.top; } catch { return true; } })();
+  return new Error(framed
+    ? "This preview window blocks outside connections. Download the file and open it directly in your browser."
+    : `Couldn’t reach ${service}. An ad blocker, VPN or work network may be blocking it.`);
+}
+
+async function tmdb(path, params = {}, key = tmdbKey()) {
+  if (!key) throw new AuthError("Add a TMDB token in API keys to get picks.");
+  const q = new URLSearchParams(params);
+  const headers = {};
+  if (isBearer(key)) headers.Authorization = "Bearer " + key; else q.set("api_key", key);
+  let r;
+  try { r = await fetch(`${API}${path}?${q}`, { headers }); } catch { throw networkError("TMDB"); }
+  if (r.status === 401) throw new AuthError("TMDB rejected the token. Open API keys and paste it again.");
+  if (r.status === 429) throw new Error("TMDB is rate-limiting requests. Wait a few seconds and retry.");
+  if (!r.ok) throw new Error(`TMDB returned an error (${r.status}). Try again shortly.`);
+  return r.json();
+}
+
+/* One cached OMDb lookup per movie: Rotten Tomatoes score, Oscars and Metascore.
+   Returns { rt, oscar, meta } where oscar is { status: "won" | "nominated", count } or null,
+   and meta is the Metascore (0–100) or null when OMDb says "N/A". */
+const NO_OMDB = Object.freeze({ rt: null, oscar: null, meta: null });
+let omdbCache = {};
+try { omdbCache = JSON.parse(sessionStorage.getItem(S.omdbCache) || "{}"); } catch {}
+try { ["goodreel.rtCache", "goodreel.omdbCache.v2"].forEach(k => sessionStorage.removeItem(k)); } catch {}   // older cache shapes
+function parseOscar(awards = "") {
+  let x = /Won (\d+) Oscars?/i.exec(awards);
+  if (x) return { status: "won", count: +x[1] };
+  x = /Nominated for (\d+) Oscars?/i.exec(awards);
+  if (x) return { status: "nominated", count: +x[1] };
+  return null;   // every other award is ignored
+}
+async function omdbInfo(imdbId, key = omdbKey()) {
+  if (!key || !imdbId) return NO_OMDB;
+  if (imdbId in omdbCache) return omdbCache[imdbId] || NO_OMDB;
+  let r;
+  try { r = await fetch(`${OMDB}?i=${encodeURIComponent(imdbId)}&apikey=${encodeURIComponent(key)}`); } catch { throw networkError("OMDb"); }
+  const d = await r.json().catch(() => ({}));
+  if (d.Response === "False") {
+    if (/api key/i.test(d.Error || "")) throw new OmdbError("OMDb says this key isn’t active. Click the activation link in OMDb’s email, or check the key for typos.");
+    if (/limit/i.test(d.Error || "")) throw new OmdbError("OMDb’s daily limit is reached. Rotten Tomatoes scores and Oscars return tomorrow.");
+    omdbCache[imdbId] = NO_OMDB; return NO_OMDB;
+  }
+  const v = (d.Ratings || []).find(x => x.Source === "Rotten Tomatoes")?.Value;
+  const n = v ? parseInt(v, 10) : null;
+  const ms = parseInt(d.Metascore, 10);
+  omdbCache[imdbId] = { rt: Number.isFinite(n) ? n : null, oscar: parseOscar(d.Awards), meta: Number.isFinite(ms) ? ms : null };
+  try { sessionStorage.setItem(S.omdbCache, JSON.stringify(omdbCache)); } catch {}
+  return omdbCache[imdbId];
+}
+const oscarText = (o, short = false) => !o ? "" : o.status === "won"
+  ? (short ? `Won ${o.count}` : `Won ${o.count} Oscar${o.count === 1 ? "" : "s"}`)
+  : (short ? `${o.count} nom${o.count === 1 ? "" : "s"}` : `${o.count} Oscar nom${o.count === 1 ? "" : "s"}`);
+
+function renderKeyState() {
+  const t = !!tmdbKey(), o = !!omdbKey();
+  $("keyDot").classList.toggle("ok", t);
+  $("keyBtn").title = `TMDB ${t ? "connected" : "missing"} · OMDb ${o ? "connected" : "not set"}`;
+  renderRT(); renderAwards();
+}
+
+/* ---------- Keys dialog ---------- */
+let sheetOpener = null;   // return focus here on close, without jumping the page
+function openSheet(msg = "", kind = "") {
+  sheetOpener = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null;
+  $("tmdbInput").value = store.get(S.tmdb) || "";
+  $("tmdbInput").placeholder = TMDB_TOKEN ? "Using the built-in token" : "eyJhbGciOiJIUzI1NiJ9…";
+  $("omdbInput").value = store.get(S.omdb) || "";
+  if (OMDB_KEY) $("omdbInput").placeholder = "Using the built-in key";
+  $("keyMsg").textContent = msg; $("keyMsg").className = "msg " + kind;
+  $("sheet").hidden = false;
+  setTimeout(() => $(kind === "omdb" ? "omdbInput" : "tmdbInput").focus(), 30);
+}
+function closeSheet() { $("sheet").hidden = true; (sheetOpener || $("generate")).focus({ preventScroll: true }); }
+$("keyBtn").addEventListener("click", () => openSheet());
+$("keyCancel").addEventListener("click", closeSheet);
+$("sheet").addEventListener("click", e => { if (e.target === $("sheet")) closeSheet(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("sheet").hidden) closeSheet(); });
+
+$("keyForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const t = $("tmdbInput").value.trim(), o = $("omdbInput").value.trim();
+  const say = (text, kind = "") => { $("keyMsg").textContent = text; $("keyMsg").className = "msg " + kind; };
+  $("keySave").disabled = true; say("Testing…");
+  try {
+    if (t) {
+      try { await tmdb("/authentication", {}, t); }
+      catch (err) { throw new Error(err instanceof AuthError ? "TMDB didn’t accept that token. Check you copied all of it." : err.message); }
+    }
+    if (o) {
+      try { omdbCache = {}; await omdbInfo("tt0111161", o); }
+      catch (err) { throw new Error(err.message); }
+    }
+    store.set(S.tmdb, t || null); store.set(S.omdb, o || null);
+    renderKeyState(); loadLogos();
+    say("Saved.", "ok"); setTimeout(closeSheet, 450);
+  } catch (err) { say(err.message, "error"); }
+  finally { $("keySave").disabled = false; }
+});
+
+/* ---------- Filters ---------- */
+function renderGenres() {
+  $("genres").innerHTML = GENRES.map(([name, id]) => {
+    const on = selGenres.has(id), full = !on && selGenres.size >= 3;
+    return `<button type="button" class="chip" data-genre="${id}" aria-pressed="${on}" ${full ? "disabled" : ""}><span class="chip-label" data-text="${name}">${name}</span></button>`;
+  }).join("");
+  $("genreCount").textContent = selGenres.size ? `${selGenres.size} of 3` : "Up to 3";
+}
+/* "Any service" leads the row. An empty selProviders means Any, so the search sends no provider filter
+   and services outside this list still count. The row is never empty: Any or at least one service is on. */
+const ANY_ICON = `<span class="chip-mono chip-any" aria-hidden="true"><svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="5" height="5" rx="1.2"/><rect x="9" y="2" width="5" height="5" rx="1.2"/><rect x="2" y="9" width="5" height="5" rx="1.2"/><rect x="9" y="9" width="5" height="5" rx="1.2"/></svg></span>`;
+const svcMono = s => `<span class="chip-mono" aria-hidden="true">${esc(initials(s.name.replace(/\+/g, "")))}</span>`;
+const svcIcon = k => {
+  const s = SERVICES[k], logo = svc(k).logo, mono = svcMono(s);
+  return logo ? `<img src="${IMG}w92${logo}" alt="" onerror="this.outerHTML='${mono.replace(/"/g, "&quot;")}'">` : mono;
+};
+const CHECK = `<span class="svc-check" aria-hidden="true"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 6.5 2.3 2.3 4.7-5.3"/></svg></span>`;
+/* "Netflix", "Netflix, Crave", "Netflix, Crave +2"; names follow the sheet's order */
+function renderSvcRow() {
+  const keys = availableKeys().filter(k => selProviders.has(k));
+  $("svcCountry").textContent = `${REGIONS[REGION].flag} ${REGIONS[REGION].label}`;
+  $("svcSum").textContent = !keys.length ? "Any service" : keys.slice(0, 2).map(k => SERVICES[k].name).join(", ") + (keys.length > 2 ? ` +${keys.length - 2}` : "");
+  $("svcMinis").innerHTML = keys.slice(0, 4).map(svcIcon).join("");
+}
+function renderSvcSheet() {
+  const keys = availableKeys(), n = selProviders.size;
+  $("svcsAny").innerHTML = `<button type="button" class="svc-any" data-prov="any" aria-pressed="${n === 0}">${ANY_ICON}<span>Any service</span>${CHECK}</button>`;
+  $("svcsBody").innerHTML = GROUPS.map(([g, title]) => {
+    const ks = keys.filter(k => SERVICES[k].group === g); if (!ks.length) return "";
+    return `<h3 class="svcs-h">${title}</h3><div class="svcs-grid">${ks.map(k => {
+      const tag = serviceTag(k);
+      return `<button type="button" class="svc-tile" data-prov="${k}" aria-pressed="${selProviders.has(k)}">${svcIcon(k)}<span class="svc-name">${esc(SERVICES[k].name)}</span>${tag ? `<span class="chip-tag">${tag}</span>` : ""}${CHECK}</button>`;
+    }).join("")}</div>`;
+  }).join("");
+  $("svcsDone").textContent = n ? `Done · ${n} selected` : "Done";
+  $("svcsClear").hidden = !n;
+}
+function renderProviders() {
+  renderSvcRow();
+  if ($("svcs").hidden) return;
+  const body = $("svcsBody"), top = body.scrollTop, f = document.activeElement?.closest?.("[data-prov]")?.dataset.prov;
+  renderSvcSheet(); body.scrollTop = top;
+  if (f) $("svcsPanel").querySelector(`[data-prov="${f}"]`)?.focus({ preventScroll: true });
+}
+function renderRegion() {
+  $("region").innerHTML = Object.entries(REGIONS).map(([code, r]) =>
+    `<button type="button" data-region="${code}" aria-pressed="${code === REGION}"><span aria-hidden="true">${r.flag}</span>${r.label}</button>`).join("");
+  $("regionName").textContent = REGIONS[REGION].phrase;
+}
+$("region").addEventListener("click", e => {
+  const b = e.target.closest("[data-region]"); if (!b || b.dataset.region === REGION) return;
+  REGION = b.dataset.region;
+  selProviders = new Set(pickedFor(REGION));
+  seen.clear();
+  renderRegion(); renderProviders(); savePrefs(); loadLogos();
+  setStatus(`Showing services in ${REGIONS[REGION].phrase}. Roll the reel for new picks.`);
+});
+/* ---------- "How picky?" card: collapsed on every load, summary always visible ---------- */
+const PICKY_DEFAULT = { rating: 7, rt: 0, awards: "any", era: "any", time: 0, lang: "any" };
+function pickySummary() {
+  const rt = rtBar(), aw = awardsBar();
+  return [
+    `${minRating.toFixed(1)}+`,
+    rt ? `🍅 ${rt}%+` : "",
+    aw === "nom" ? "Oscar nominees" : aw === "won" ? "Oscar winners" : "",
+    era !== "any" ? ERAS[era].label : "",
+    maxRuntime ? TIMES.find(([v]) => v === maxRuntime)[1] : "",
+    langFilter === "intl" ? "International" : ""
+  ].filter(Boolean).join(" · ");
+}
+const pickyIsDefault = () => minRating === PICKY_DEFAULT.rating && !rtBar() && awardsBar() === "any" && era === "any" && !maxRuntime && langFilter === "any";
+function renderPickyHead() {
+  if (!$("pickySummary")) return;
+  $("pickySummary").textContent = pickySummary();
+  $("pickyReset").hidden = pickyIsDefault();
+}
+function setPickyOpen(open) {
+  $("picky").classList.toggle("open", open);
+  $("pickyToggle").setAttribute("aria-expanded", String(open));
+  $("pickyBody").inert = !open;   // collapsed controls can't be reached by keyboard or screen readers
+}
+$("pickyToggle").addEventListener("click", () => setPickyOpen(!$("picky").classList.contains("open")));
+$("pickyReset").addEventListener("click", () => {
+  minRating = PICKY_DEFAULT.rating; minRT = PICKY_DEFAULT.rt; awardsLevel = PICKY_DEFAULT.awards;
+  era = PICKY_DEFAULT.era; maxRuntime = PICKY_DEFAULT.time; langFilter = PICKY_DEFAULT.lang;
+  renderRating(); renderRT(); renderAwards(); renderEra(); renderTime(); renderLang();
+  savePrefs();
+  $("pickyToggle").focus({ preventScroll: true });   // Reset hides itself, so keep focus in the card
+  pickyChanged();                                    // one refresh
+});
+
+function renderRating() {
+  $("rating").innerHTML = RATINGS.map(r => `<button type="button" data-rating="${r}" aria-pressed="${r === minRating}">${r.toFixed(1)}+</button>`).join("");
+  renderPickyHead();
+}
+/* Without an OMDb key the Rotten Tomatoes and Awards bars can't apply, so they read as Any */
+const rtBar = () => omdbKey() ? minRT : 0;
+const awardsBar = () => omdbKey() ? awardsLevel : "any";
+const omdbSetupLink = `<button type="button" class="link" data-omdb-setup>Add OMDb key</button>`;
+function renderRT() {
+  const has = !!omdbKey();
+  $("rt").innerHTML = RT_LEVELS.map(v => `<button type="button" data-rt="${v}" aria-pressed="${v === rtBar()}" ${!has && v ? "disabled" : ""}>${v ? `${ICON.tomato}${v}%+` : "Any"}</button>`).join("");
+  $("rtHint").innerHTML = has ? "" : omdbSetupLink;
+  renderPickyHead();
+}
+function renderAwards() {
+  const has = !!omdbKey();
+  $("awards").innerHTML = AWARD_LEVELS.map(([v, label]) =>
+    `<button type="button" data-awards="${v}" aria-pressed="${v === awardsBar()}" ${!has && v !== "any" ? "disabled" : ""}>${v === "any" ? "" : `<span class="award-ico">${ICON.trophy}</span>`}${label}</button>`).join("");
+  $("awardsHint").innerHTML = has ? "" : omdbSetupLink;
+  renderPickyHead();
+}
+function renderEra() {
+  $("era").innerHTML = Object.entries(ERAS).map(([v, e]) => `<button type="button" data-era="${v}" aria-pressed="${v === era}">${e.label}</button>`).join("");
+  $("eraHint").textContent = ERAS[era].hint;
+  renderPickyHead();
+}
+function renderLang() {
+  $("lang").innerHTML = LANG_LEVELS.map(([v, label]) => `<button type="button" data-lang="${v}" aria-pressed="${v === langFilter}">${label}</button>`).join("");
+  renderPickyHead();
+}
+function renderTime() {
+  $("time").innerHTML = TIMES.map(([v, label]) => `<button type="button" data-time="${v}" aria-pressed="${v === maxRuntime}">${label}</button>`).join("");
+  renderPickyHead();
+}
+$("genres").addEventListener("click", e => {
+  const b = e.target.closest("[data-genre]"); if (!b || b.disabled) return;
+  const id = +b.dataset.genre; selGenres.has(id) ? selGenres.delete(id) : selGenres.add(id);
+  renderGenres(); savePrefs();
+});
+/* Services: tapping a tile toggles it; Any is on whenever nothing specific is. Never triggers a search. */
+$("svcs").addEventListener("click", e => {
+  if (e.target === $("svcs")) return closeSvcs();
+  const b = e.target.closest("[data-prov]"); if (!b) return;
+  const k = b.dataset.prov;
+  if (k === "any") {
+    if (!selProviders.size) return;          // already on: nothing to do
+    selProviders.clear();                    // clear every specific service
+  } else {
+    selProviders.has(k) ? selProviders.delete(k) : selProviders.add(k);   // last one off → empty → Any is on again
+  }
+  renderProviders(); savePrefs();
+});
+$("svcsClear").addEventListener("click", () => { selProviders.clear(); renderProviders(); savePrefs(); $("svcsDone").focus({ preventScroll: true }); });
+$("svcsDone").addEventListener("click", closeSvcs);
+let svcsOpener = null;
+function openSvcs() {
+  svcsOpener = $("svcRow");
+  renderSvcSheet();
+  const panel = $("svcsPanel"); panel.style.transform = ""; $("svcsBody").scrollTop = 0;
+  $("svcs").hidden = false;
+  document.body.style.overflow = "hidden";
+  requestAnimationFrame(() => requestAnimationFrame(() => $("svcs").classList.add("open")));
+  setTimeout(() => ($("svcsPanel").querySelector('[aria-pressed="true"]') || $("svcsDone")).focus({ preventScroll: true }), 50);
+}
+function closeSvcs() {
+  if ($("svcs").hidden) return;
+  $("svcs").classList.remove("open");
+  $("svcsPanel").style.transform = "";
+  document.body.style.overflow = "";
+  setTimeout(() => { if (!$("svcs").classList.contains("open")) $("svcs").hidden = true; }, 220);
+  svcsOpener?.focus({ preventScroll: true });
+}
+$("svcRow").addEventListener("click", openSvcs);
+document.addEventListener("keydown", e => {
+  if ($("svcs").hidden) return;
+  if (e.key === "Escape") closeSvcs();
+  if (e.key === "Tab") {           // keep focus inside the sheet
+    const f = [...$("svcsPanel").querySelectorAll("button:not([hidden])")];
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
+/* Swipe down to close: from the header, or from the list when it's scrolled to the top */
+(() => {
+  const panel = $("svcsPanel"), body = $("svcsBody");
+  let startY = null, dy = 0;
+  panel.addEventListener("touchstart", e => {
+    if (body.contains(e.target) && body.scrollTop > 0) { startY = null; return; }
+    startY = e.touches[0].clientY; dy = 0; panel.style.transition = "none";
+  }, { passive: true });
+  panel.addEventListener("touchmove", e => {
+    if (startY == null) return;
+    dy = Math.max(0, e.touches[0].clientY - startY);
+    if (dy > 0) panel.style.transform = `translateY(${dy}px)`;
+  }, { passive: true });
+  panel.addEventListener("touchend", () => {
+    if (startY == null) return;
+    panel.style.transition = "";
+    if (dy > 90) closeSvcs(); else panel.style.transform = "";
+    startY = null;
+  });
+})();
+$("rating").addEventListener("click", e => {
+  const b = e.target.closest("[data-rating]"); if (!b) return;
+  if (+b.dataset.rating === minRating) return;
+  minRating = +b.dataset.rating; renderRating(); savePrefs(); pickyChanged();
+});
+$("rt").addEventListener("click", e => {
+  const b = e.target.closest("[data-rt]"); if (!b || b.disabled) return;
+  if (+b.dataset.rt === minRT) return;
+  minRT = +b.dataset.rt; renderRT(); savePrefs(); pickyChanged();
+});
+$("awards").addEventListener("click", e => {
+  const b = e.target.closest("[data-awards]"); if (!b || b.disabled) return;
+  if (b.dataset.awards === awardsLevel) return;
+  awardsLevel = b.dataset.awards; renderAwards(); savePrefs(); pickyChanged();
+});
+$("era").addEventListener("click", e => {
+  const b = e.target.closest("[data-era]"); if (!b) return;
+  if (b.dataset.era === era) return;
+  era = b.dataset.era; renderEra(); savePrefs(); pickyChanged();
+});
+$("lang").addEventListener("click", e => {
+  const b = e.target.closest("[data-lang]"); if (!b) return;
+  if (b.dataset.lang === langFilter) return;
+  langFilter = b.dataset.lang; renderLang(); savePrefs(); pickyChanged();
+});
+$("time").addEventListener("click", e => {
+  const b = e.target.closest("[data-time]"); if (!b) return;
+  if (+b.dataset.time === maxRuntime) return;
+  maxRuntime = +b.dataset.time; renderTime(); savePrefs(); pickyChanged();
+});
+document.addEventListener("click", e => { if (e.target.closest("[data-omdb-setup]")) openSheet("Add a free OMDb key to filter by Rotten Tomatoes and Oscars.", "omdb"); });
+
+async function loadLogos() {
+  if (!tmdbKey()) return;
+  try {
+    const r = REGION;
+    const data = await tmdb("/watch/providers/movie", { watch_region: r, language: REGIONS[r].lang });
+    const list = data.results || [];
+    const map = {};
+    for (const k of Object.keys(SERVICES)) {
+      const S_ = SERVICES[k];
+      const hits = list.filter(p => S_.match.test((p.provider_name || "").trim()) || S_.ids.includes(p.provider_id));
+      if (!hits.length) continue;
+      const main = hits.find(p => S_.ids.includes(p.provider_id) && p.logo_path) || hits.find(p => p.logo_path) || hits[0];
+      const prios = hits.map(p => p.display_priorities?.[r] ?? p.display_priority).filter(Number.isFinite);
+      map[k] = { ids: [...new Set([...hits.map(p => p.provider_id), ...S_.ids])], logo: main.logo_path || null, prio: prios.length ? Math.min(...prios) : null };
+    }
+    if (!Object.keys(map).length) return;       // an empty answer isn't a list: keep what we have
+    resolved[r] = map;
+    try { localStorage.setItem("goodreel.services." + r, JSON.stringify(map)); } catch {}
+    if (r === REGION) {
+      const gone = [...selProviders].filter(k => !map[k]);
+      if (gone.length) { gone.forEach(k => selProviders.delete(k)); savePrefs(); }
+      renderProviders();
+    }
+  } catch {}
+}
+
+/* ---------- Mode: Crowd favourites / Hidden gems ---------- */
+let hasPicks = false;   // live picks on screen (not the empty state or offline classics)
+let picksMode = mode;   // the mode the on-screen picks came from
+// The results title describes what's on screen; the button describes what the next tap finds.
+const resultsTitleText = () => (hasPicks ? picksMode : mode) === "gems" ? "Tonight’s gems" : "Picks";
+function renderMode() {
+  const gems = mode === "gems";
+  document.body.classList.toggle("gems", gems);
+  document.querySelectorAll("#mode [data-mode]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+  $("headline").textContent = gems ? "Four hidden gems for tonight." : "Four good reels for tonight.";
+  $("tagline").hidden = !gems;
+  document.querySelector(".lede").hidden = gems;
+  const again = hasPicks && picksMode === mode;
+  $("goLabel").textContent = gems ? (again ? "Find more gems" : "Find hidden gems") : (again ? "Roll again" : "Roll the reel");
+  if (!$("resultsTitle").dataset.offline) $("resultsTitle").textContent = resultsTitleText();
+}
+$("mode").addEventListener("click", e => {
+  const b = e.target.closest("[data-mode]"); if (!b || b.dataset.mode === mode) return;
+  mode = b.dataset.mode;
+  seen.clear();
+  savePrefs();
+  renderMode();   // wording and button only: no search, no scroll. The next Roll uses the new mode.
+});
+/* One-time "New: Hidden gems" hint under the toggle; gone on the next tap, never shown again */
+(() => {
+  let seenHint = true;
+  try { seenHint = !!localStorage.getItem(S.gemsHint); localStorage.setItem(S.gemsHint, "1"); } catch {}
+  if (seenHint) return;
+  $("modeHint").hidden = false;
+  const hide = () => { $("modeHint").hidden = true; document.removeEventListener("pointerdown", hide, true); document.removeEventListener("keydown", hide, true); };
+  document.addEventListener("pointerdown", hide, true);
+  document.addEventListener("keydown", hide, true);
+})();
+
+/* ---------- Results ---------- */
+const shuffle = a => { const x = [...a]; for (let i = x.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [x[i], x[j]] = [x[j], x[i]]; } return x; };
+const fmtRuntime = m => { if (!m) return ""; const h = Math.floor(m / 60), r = m % 60; return h ? `${h}h ${String(r).padStart(2, "0")}m` : `${r}m`; };
+const initials = n => n.split(/\s+/).map(x => x[0]).slice(0, 2).join("").toUpperCase();
+
+/* Same reel as the logo, with the spin and twinkle hooks */
+const REEL_ANIM = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g class="reel-spin"><path fill-rule="evenodd" d="M2.50 10.50a8 8 0 1 0 16 0a8 8 0 1 0 -16 0ZM8.70 6.10a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM12.88 9.14a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM11.29 14.06a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM6.11 14.06a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM4.52 9.14a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM9.60 10.50a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0Z"/></g><rect x="10.5" y="17" width="11.5" height="3" rx="1.5"/><path class="reel-spark" d="M20 .8Q20.6 3.4 23.2 4 20.6 4.6 20 7.2 19.4 4.6 16.8 4 19.4 3.4 20 .8Z"/></svg>`;
+function skeletons() {
+  return Array.from({ length: PICK_COUNT }, () => `<div class="tile" aria-hidden="true"><div class="poster skel-reel">${REEL_ANIM}</div><div class="tile-body"><div class="skel" style="height:14px;width:85%"></div><div class="skel" style="height:12px;width:50%"></div><div class="skel" style="height:12px;width:65%"></div></div></div>`).join("");
+}
+
+function posterMarkup(m, size = "w500") {
+  const year = (m.release_date || "").slice(0, 4);
+  return m.classic
+    ? `<div class="poster-art" style="--hue:${m.hue}" aria-hidden="true"><span class="pa-year">${year}</span><span class="pa-title">${esc(m.title)}</span>${ICON.reel}</div>`
+    : `<img src="${IMG}${size}${m.poster_path}" alt="${esc(m.title)} poster" loading="lazy" onerror="this.remove()">`;
+}
+
+/* Service icon with a lettered fallback if the logo can't load */
+function provIcon(p) {
+  const name = esc(p.provider_name);
+  return p.logo_path
+    ? `<span class="prov" title="${name}"><img src="${IMG}w92${p.logo_path}" alt="${name}" onerror="this.replaceWith(document.createTextNode('${esc(initials(p.provider_name))}'))"></span>`
+    : `<span class="prov" title="${name}">${esc(initials(p.provider_name))}</span>`;
+}
+
+/* Subscription plus free / ad-supported services, without duplicates */
+/* Subscription plus free / ad-supported services, one entry per service:
+   "Netflix" and "Netflix Standard with Ads", or "Prime Video" and "Prime Video with Ads", show once. */
+const baseServiceName = n => (n || "").replace(/\s+(basic\s+|standard\s+)?with\s+ads$/i, "").trim();
+function streamsFor(m) {
+  const wp = m["watch/providers"]?.results?.[REGION] || {};
+  const out = new Map();
+  for (const p of [...(wp.flatrate || []), ...(wp.free || []), ...(wp.ads || [])]) {
+    const k = serviceKeyFor(p);
+    const name = k ? SERVICES[k].name : baseServiceName(p.provider_name);
+    const key = k ? "svc:" + k : "name:" + name.toLowerCase();
+    const plain = !/with\s+ads/i.test(p.provider_name || "");
+    const prev = out.get(key);
+    // keep the first position; prefer the plain (no-ads) entry, and any entry that has a logo
+    if (!prev) out.set(key, { ...p, provider_name: name, plain });
+    else if ((plain && !prev.plain) || (!prev.logo_path && p.logo_path)) out.set(key, { ...p, provider_name: name, plain: plain || prev.plain });
+  }
+  return [...out.values()];
+}
+
+function tile(m, idx) {
+  const year = (m.release_date || "").slice(0, 4);
+  let streams = streamsFor(m);
+  if (selProviders.size) { const ids = selectedIds(); streams = [...streams].sort((a, b) => ids.has(b.provider_id) - ids.has(a.provider_id)); }
+  const shown = streams.slice(0, 4), extra = streams.length - shown.length;
+  const streamRow = m.classic
+    ? `<span class="t-streams-note">Services show when online</span>`
+    : streams.length
+      ? shown.map(provIcon).join("") + (extra > 0 ? `<span class="prov prov-more" title="${extra} more">+${extra}</span>` : "")
+      : `<span class="t-streams-note">Not streaming here</span>`;
+  const rt = m.rt == null
+    ? `<span class="score" title="Rotten Tomatoes">${ICON.tomato}<span class="na">${omdbKey() ? "n/a" : "—"}</span></span>`
+    : `<span class="score" title="Rotten Tomatoes Tomatometer">${ICON.tomato}${m.rt}%</span>`;
+  const oscar = m.oscar
+    ? `<span class="oscar-pill${m.oscar.status === "won" ? "" : " nom"}" title="${oscarText(m.oscar)}" aria-hidden="true">${ICON.trophy}${oscarText(m.oscar, true)}</span>` : "";
+  return `<button type="button" class="tile" data-idx="${idx}" aria-haspopup="dialog" aria-label="${esc(m.title)}${m.oscar ? `, ${oscarText(m.oscar)}` : ""}, details">
+    <div class="poster">${oscar}${posterMarkup(m)}</div>
+    <div class="tile-body">
+      <h3 class="t-title">${esc(m.title)}</h3>
+      <div class="t-sub">${[year, fmtRuntime(m.runtime), langName(m.original_language)].filter(Boolean).join(" · ")}</div>
+      <div class="scores">
+        <span class="score" title="TMDB rating">${ICON.star}${Number(m.vote_average).toFixed(1)}</span>
+        ${rt}
+      </div>
+      <div class="t-streams" aria-label="Streaming on">${streamRow}</div>
+    </div>
+  </button>`;
+}
+
+function setStatus(text, error = false) { $("status").textContent = text; $("status").className = "status" + (error ? " error" : ""); }
+const showEmpty = (title, body) => { hasPicks = false; $("results").innerHTML = `<div class="empty"><strong>${esc(title)}</strong>${esc(body)}</div>`; };
+
+function showClassics(reason) {
+  current = CLASSICS;
+  $("results").innerHTML = CLASSICS.map(tile).join("");
+  hasPicks = false;
+  $("resultsTitle").dataset.offline = "1";
+  $("resultsTitle").textContent = "Classics while we’re offline";
+  $("resultMeta").textContent = "Scores approximate";
+  setStatus(reason, true);
+}
+
+async function enrich(m) {
+  const d = await tmdb(`/movie/${m.id}`, { language: LANG(), append_to_response: "watch/providers" }).catch(() => null);
+  const full = d ? { ...m, ...d } : m;
+  full.rt = null; full.oscar = null; full.meta = null;
+  if (!omdbProblem) {
+    try { const o = await omdbInfo(full.imdb_id); full.rt = o.rt; full.oscar = o.oscar; full.meta = o.meta; }
+    catch (err) { omdbProblem = err.message; }
+  }
+  return full;
+}
+
+/* What the OMDb-backed bars ask for, in words: "Oscar winners at 80%+ on Rotten Tomatoes" */
+function barText(rt, aw) {
+  const who = aw === "won" ? "Oscar winners" : aw === "nom" ? "Oscar nominees" : "movies";
+  return rt ? `${who} at ${rt}%+ on Rotten Tomatoes` : who;
+}
+const passesAwards = (m, aw) => aw === "any" || (!!m.oscar && (aw === "nom" || m.oscar.status === "won"));
+function noMatchHint() {
+  const tips = ["a lower rating"];
+  if (era !== "any") tips.push("a different era");
+  if (maxRuntime) tips.push("more time");
+  if (langFilter === "intl") tips.push("any language");
+  if (selProviders.size) tips.push("fewer services");
+  return `Nothing fits every filter. Try ${tips.length > 1 ? tips.slice(0, -1).join(", ") + " or " + tips.at(-1) : tips[0]}.`;
+}
+
+async function generate() {
+  if (!tmdbKey()) { openSheet("Add a TMDB token to get picks."); return; }
+  const btn = $("generate"); btn.disabled = true;
+  const gems = mode === "gems";
+  const rt = rtBar(), aw = awardsBar(), needsOmdb = gems || !!rt || aw !== "any";
+  setStatus(gems ? "Finding hidden gems…" : needsOmdb ? `Finding ${barText(rt, aw)}…` : "Finding movies…");
+  $("resultMeta").textContent = "";
+  $("results").innerHTML = skeletons();
+  // Let the rolling reels play for at least a second so the pick feels considered.
+  const shownAt = Date.now();
+  const settle = () => matchMedia("(prefers-reduced-motion: reduce)").matches ? null
+    : new Promise(r => setTimeout(r, Math.max(0, 1000 - (Date.now() - shownAt))));
+  try {
+    const params = {
+      language: LANG(), region: REGION, watch_region: REGION,
+      include_adult: "false", include_video: "false",
+      sort_by: "vote_average.desc",
+      "vote_average.gte": String(minRating),
+      with_watch_monetization_types: "flatrate|free|ads"
+    };
+    if (gems) { params["vote_count.gte"] = String(GEMS.voteMin); params["vote_count.lte"] = String(GEMS.voteMax); }
+    else params["vote_count.gte"] = "300";
+    if (selGenres.size) params.with_genres = [...selGenres].join("|");
+    if (selProviders.size) params.with_watch_providers = [...selectedIds()].join("|");
+    const e = ERAS[era];
+    if (e.gte) params["primary_release_date.gte"] = e.gte;
+    if (e.lte) params["primary_release_date.lte"] = e.lte;
+    if (maxRuntime) { params["with_runtime.lte"] = String(maxRuntime); params["with_runtime.gte"] = "60"; }
+
+    if (gems && !omdbKey()) {
+      await settle();
+      showEmpty("Hidden gems needs critic scores", "Add a free OMDb key in API keys (footer), or try Crowd favourites.");
+      setStatus(""); return;
+    }
+    const first = await tmdb("/discover/movie", { ...params, page: 1 });
+    const maxPage = Math.min(first.total_pages || 1, gems ? GEMS.pages : 12);   // gems are spread thin, so draw from more pages
+    const pageQueue = shuffle(Array.from({ length: Math.max(0, maxPage - 1) }, (_, i) => i + 2));
+    // International keeps only non-English originals, filtered here so it costs no OMDb calls
+    const keep = m => m.poster_path && (langFilter !== "intl" || (m.original_language && m.original_language !== "en"));
+    const byId = new Map();
+    const add = r => (r.results || []).forEach(m => { if (keep(m)) byId.set(m.id, m); });
+    add(first);
+    const want = (gems ? 24 : 12) * (langFilter === "intl" ? 1 : 0) || 0;   // extra fill target when the filter thins the pool
+    let fetched = 0;
+    const fetchPages = async n => {
+      const batch = pageQueue.splice(0, n);
+      fetched += batch.length;
+      (await Promise.all(batch.map(p => tmdb("/discover/movie", { ...params, page: p }).catch(() => ({ results: [] }))))).forEach(add);
+    };
+    await fetchPages(gems ? 5 : 3);
+    while (pageQueue.length && fetched < (gems ? GEMS.pages : 12) && byId.size < Math.max(want, gems ? 20 : 0)) await fetchPages(4);
+    const pool = [...byId.values()];
+    if (!pool.length) { await settle(); showEmpty("No matches", noMatchHint()); setStatus(""); return; }
+
+    let fresh = pool.filter(m => !seen.has(m.id));
+    if (fresh.length < PICK_COUNT) { seen.clear(); fresh = pool; }
+    const queue = shuffle(fresh);
+
+    // Enrich in small batches until PICK_COUNT pass every bar (or we run out).
+    // A movie must clear both the Rotten Tomatoes bar and the Awards filter.
+    const picks = [];
+    omdbProblem = null;
+    const limit = needsOmdb ? 48 : maxRuntime ? 12 : PICK_COUNT;
+    const passes = m =>
+      (!gems || isGem(m)) &&                                       // critics loved it: Metascore 75+ or RT 85%+
+      (!rt || (m.rt != null && m.rt >= rt)) &&
+      passesAwards(m, aw) &&
+      (!maxRuntime || !m.runtime || m.runtime <= maxRuntime);   // runtime safety net
+    for (let i = 0; i < Math.min(queue.length, limit) && picks.length < PICK_COUNT; i += 6) {
+      if (omdbProblem && needsOmdb) break;
+      const batch = await Promise.all(queue.slice(i, Math.min(i + 6, limit)).map(enrich));
+      for (const m of batch) {
+        seen.add(m.id);
+        if (picks.length < PICK_COUNT && passes(m)) picks.push(m);
+      }
+    }
+
+    await settle();
+    if (omdbProblem && gems) {
+      const msg = "Hidden gems needs critic scores, which aren’t available right now. Try Crowd favourites, or come back tomorrow.";
+      showEmpty("Critic scores unavailable", msg); setStatus(msg, true); return;
+    }
+    if (omdbProblem && needsOmdb) {
+      const what = rt && aw !== "any" ? "Rotten Tomatoes and Oscars" : rt ? "Rotten Tomatoes scores" : "Oscars data";
+      const reset = rt && aw !== "any" ? "Rotten Tomatoes and Awards" : rt ? "Rotten Tomatoes" : "Awards";
+      showEmpty(`${what[0].toUpperCase() + what.slice(1)} unavailable`, `${omdbProblem} Or set ${reset} to Any.`);
+      setStatus(omdbProblem, true); return;
+    }
+    if (!picks.length) {
+      if (gems) showEmpty("No hidden gems this roll", "None of the movies checked were critic favourites. Try more services, a lower rating, or roll again.");
+      else if (needsOmdb) showEmpty(rt && aw === "any" ? "No matches at that Tomatometer" : "No matches at that bar",
+        `None of the movies checked were ${barText(rt, aw)}. Try a looser bar or roll again.`);
+      else showEmpty("No matches", noMatchHint());
+      setStatus(""); return;
+    }
+    delete $("resultsTitle").dataset.offline;
+    hasPicks = true; picksMode = mode;
+    current = picks;
+    $("results").innerHTML = picks.map(tile).join("");
+    $("resultMeta").textContent = langFilter === "intl" ? "" : `${first.total_results.toLocaleString(LANG())} movies match`;
+    renderMode();
+    setStatus(omdbProblem ? `Picks loaded without Rotten Tomatoes scores or Oscars. ${omdbProblem}`
+      : picks.length < PICK_COUNT
+        ? (gems ? `Found ${picks.length} hidden gem${picks.length === 1 ? "" : "s"} this roll. Try more services or a lower rating for more.`
+                : `Found ${picks.length} ${needsOmdb ? barText(rt, aw) : "matching movies"} this roll. Roll again for more.`)
+        : "", !!omdbProblem);
+  } catch (err) {
+    await settle();
+    showClassics(err.message);
+    if (err instanceof AuthError) openSheet(err.message, "error");
+  } finally { btn.disabled = false; }
+}
+/* Reel animation: start on tap, finish the current turn when loading ends */
+let stopReel = false;
+function startReel() { stopReel = false; document.body.classList.add("rolling"); }
+function endReel() { stopReel = true; }
+document.querySelector(".brand .reel-spin").addEventListener("animationiteration", () => {
+  if (stopReel) document.body.classList.remove("rolling");
+});
+let busy = false, rerun = false;
+async function roll() {
+  if (busy) { rerun = true; return; }   // a change mid-search queues one more search
+  busy = true;
+  startReel();
+  const started = Date.now();
+  try { await generate(); }
+  finally {
+    // Keep the logo reel turning for at least a second, matching the placeholders
+    setTimeout(endReel, Math.max(0, 1000 - (Date.now() - started)));
+    busy = false;
+    if (rerun) { rerun = false; roll(); }
+  }
+}
+/* "How picky?" changes search right away, using the current mood and services.
+   Results sit above this card, so bring them into view if they're off screen. */
+/* Bring the results into view unless the header is already comfortably on screen.
+   Smooth normally, instant with reduced motion. */
+function scrollToResults() {
+  const head = $("resultsTitle").getBoundingClientRect();
+  if (head.top >= 0 && head.top <= innerHeight * 0.6) return;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  $("resultsSection").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+}
+function pickyChanged() {
+  if (!tmdbKey()) return;
+  roll();              // puts the loading tiles in place first, so the page is tall enough to scroll to them
+  scrollToResults();
+}
+/* Roll the reel / Roll again: scroll at the moment of the tap so the loading tiles show right away.
+   No token means the API keys dialog opens instead, so don't scroll. */
+$("generate").addEventListener("click", () => {
+  roll();                               // loading tiles render synchronously here
+  if (tmdbKey()) scrollToResults();
+});
+
+/* ---------- Details sheet ---------- */
+let lastTile = null, openMovie = null;
+
+/* Which of our services a TMDB provider is: by provider ID first, then by name */
+function serviceKeyFor(p) {
+  const keys = Object.keys(SERVICES);
+  return keys.find(k => svc(k).ids.includes(p.provider_id))
+      || keys.find(k => SERVICES[k].match.test((p.provider_name || "").trim()))
+      || null;
+}
+/* The service's own search for this title (opens the app on iPhone), else TMDB's watch page */
+function watchHref(p, m, fallback) {
+  const t = SERVICES[serviceKeyFor(p)]?.search;
+  return t ? t.replace("{cc}", REGION.toLowerCase()).replace("{q}", encodeURIComponent(m.title)) : fallback;
+}
+
+/* ---------- Share ---------- */
+function shareText(m) {
+  const year = (m.release_date || "").slice(0, 4);
+  const ids = selectedIds();
+  const first = [...streamsFor(m)].sort((a, b) => ids.has(b.provider_id) - ids.has(a.provider_id))[0];
+  return [
+    `Tonight: ${m.title}${year ? ` (${year})` : ""}`,
+    m.vote_average ? `★ ${Number(m.vote_average).toFixed(1)}` : "",
+    m.rt != null ? `🍅 ${m.rt}%` : "",
+    m.oscar ? `🏆 ${oscarText(m.oscar)}` : "",
+    first ? `on ${first.provider_name}` : ""
+  ].filter(Boolean).join(" · ");
+}
+const appUrl = () => location.origin && location.origin !== "null" ? location.origin + location.pathname : location.href.split(/[?#]/)[0];
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return; } catch {}
+  const ta = Object.assign(document.createElement("textarea"), { value: text });
+  ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+  $("detailsPanel").append(ta); ta.select();
+  const ok = document.execCommand("copy"); ta.remove();
+  if (!ok) throw new Error("copy failed");
+}
+let shareTimer = 0;
+function flashShare(text, ok = true) {
+  const btn = $("shareBtn"), toast = $("shareToast"); if (!btn || !toast) return;
+  toast.textContent = text; toast.hidden = false;
+  if (ok) btn.innerHTML = ICON.check;
+  clearTimeout(shareTimer);
+  shareTimer = setTimeout(() => {
+    if ($("shareToast")) { $("shareToast").hidden = true; $("shareToast").textContent = ""; }
+    if ($("shareBtn")) $("shareBtn").innerHTML = ICON.share;
+  }, 1800);
+}
+async function sharePick(m) {
+  const text = shareText(m), url = appUrl();
+  if (navigator.share) {
+    try { await navigator.share({ title: `${m.title} · GoodReel Pick`, text, url }); return; }
+    catch (err) { if (err?.name === "AbortError") return; }   // cancelled: do nothing; other errors fall back to copy
+  }
+  try { await copyText(`${text}\n${url}`); flashShare("Copied"); }
+  catch { flashShare("Couldn’t copy", false); }
+}
+function detailsMarkup(m) {
+  const year = (m.release_date || "").slice(0, 4);
+  const genres = (m.genres || []).map(g => typeof g === "string" ? g : g.name).slice(0, 3);
+  const wp = m["watch/providers"]?.results?.[REGION];
+  const streams = streamsFor(m);
+  const watchUrl = wp?.link || `https://www.themoviedb.org/movie/${m.id}/watch?locale=${REGION}`;
+  const rt = m.rt == null ? `<span class="na">${omdbKey() ? "n/a" : "—"}</span>` : `${m.rt}%`;
+  const oscar = m.oscar
+    ? `<div class="d-score"><span class="award-ico">${ICON.trophy}</span><span>${m.oscar.status === "won"
+        ? `<b class="d-award">Won ${m.oscar.count}</b><small>Oscar${m.oscar.count === 1 ? "" : "s"}</small>`
+        : `<b class="d-award">${m.oscar.count}</b><small>Oscar nom${m.oscar.count === 1 ? "" : "s"}</small>`}</span></div>` : "";
+  const svcLink = p => {
+    const href = watchHref(p, m, watchUrl), name = esc(p.provider_name);
+    const mono = `<span class="prov" aria-hidden="true">${esc(initials(p.provider_name))}</span>`;
+    const icon = p.logo_path ? `<img src="${IMG}w92${p.logo_path}" alt="" onerror="this.outerHTML='${mono.replace(/"/g, "&quot;")}'">` : mono;
+    const tag = serviceTag(serviceKeyFor(p)) === "Library card" ? "Library card" : "";   // borrowed with a library card, not paid for
+    return `<li><a class="d-svc" href="${esc(href)}" target="_blank" rel="noopener" title="${name}" aria-label="Watch ${esc(m.title)} on ${name}${tag ? " (library card)" : ""} (opens in a new tab)">${icon}</a>${tag ? `<span class="d-tag">${tag}</span>` : ""}</li>`;
+  };
+  return `
+    <div class="d-grab" aria-hidden="true"></div>
+    <button type="button" class="btn btn-ghost btn-icon d-share" id="shareBtn" aria-label="Share ${esc(m.title)}" title="Share">${ICON.share}</button>
+    <span class="d-toast" id="shareToast" role="status" aria-live="polite" hidden></span>
+    <button type="button" class="btn btn-ghost btn-icon d-close" id="detailsClose" aria-label="Close details">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <div class="d-head">
+      <div class="poster d-poster">${posterMarkup(m, "w342")}</div>
+      <div class="d-titles">
+        <h2 class="d-title" id="detailsTitle">${esc(m.title)}</h2>
+        <div class="t-sub">${[year, fmtRuntime(m.runtime), langName(m.original_language)].filter(Boolean).join(" · ")}</div>
+        ${genres.length ? `<div class="d-genres">${genres.map(g => `<span class="badge">${esc(g)}</span>`).join("")}</div>` : ""}
+        <div class="d-scores">
+          <div class="d-score">${ICON.star}<span><b>${Number(m.vote_average).toFixed(1)}</b><small>TMDB</small></span></div>
+          <div class="d-score">${ICON.tomato}<span><b>${rt}</b><small>Tomatometer</small></span></div>
+          ${m.meta != null ? `<div class="d-score">${ICON.meta}<span><b>${m.meta}</b><small>Metacritic</small></span></div>` : ""}
+          ${oscar}
+        </div>
+      </div>
+    </div>
+    <div class="d-about">
+      <p class="d-overview">${esc(m.overview || "No synopsis available yet.")}</p>
+      <a class="link d-tmdb" href="https://www.themoviedb.org/movie/${m.id}" target="_blank" rel="noopener" aria-label="More details on TMDB (opens in a new tab)">More details${ICON.ext}</a>
+    </div>
+    <div class="d-section">
+      ${streams.length
+        ? `<ul class="d-streams" aria-label="Watch on">${streams.map(svcLink).join("")}</ul>`
+        : `<span class="hint">${m.classic ? "Live availability shows when you’re back online." : "Not streaming on a subscription or free service right now."}</span>`}
+      <a class="link d-all" href="${esc(watchUrl)}" target="_blank" rel="noopener">See all watch options</a>
+    </div>`;
+}
+function openDetails(idx, fromEl) {
+  const m = current[idx]; if (!m) return;
+  lastTile = fromEl;
+  const panel = $("detailsPanel");
+  panel.innerHTML = detailsMarkup(m);
+  panel.scrollTop = 0; panel.style.transform = "";
+  $("details").hidden = false;
+  document.body.style.overflow = "hidden";
+  requestAnimationFrame(() => requestAnimationFrame(() => $("details").classList.add("open")));
+  $("detailsClose").addEventListener("click", closeDetails);
+  openMovie = m;
+  $("shareBtn").addEventListener("click", () => sharePick(openMovie));
+  setTimeout(() => $("detailsClose").focus({ preventScroll: true }), 50);
+}
+function closeDetails() {
+  if ($("details").hidden) return;
+  $("details").classList.remove("open");
+  $("detailsPanel").style.transform = "";
+  document.body.style.overflow = "";
+  setTimeout(() => { $("details").hidden = true; }, 220);
+  lastTile?.focus({ preventScroll: true });
+}
+$("results").addEventListener("click", e => {
+  const t = e.target.closest(".tile[data-idx]"); if (t) openDetails(+t.dataset.idx, t);
+});
+$("details").addEventListener("click", e => { if (e.target === $("details")) closeDetails(); });
+document.addEventListener("keydown", e => {
+  if ($("details").hidden) return;
+  if (e.key === "Escape") closeDetails();
+  if (e.key === "Tab") {           // keep focus inside the sheet
+    const f = [...$("detailsPanel").querySelectorAll("button, a[href]")];
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
+/* Swipe down to close (phones): drag from the top area, or anywhere when scrolled to the top */
+(() => {
+  const panel = $("detailsPanel");
+  let startY = null, dy = 0;
+  panel.addEventListener("touchstart", e => {
+    if (panel.scrollTop > 0) { startY = null; return; }
+    startY = e.touches[0].clientY; dy = 0; panel.style.transition = "none";
+  }, { passive: true });
+  panel.addEventListener("touchmove", e => {
+    if (startY == null) return;
+    dy = Math.max(0, e.touches[0].clientY - startY);
+    if (dy > 0) panel.style.transform = `translateY(${dy}px)`;
+  }, { passive: true });
+  panel.addEventListener("touchend", () => {
+    if (startY == null) return;
+    panel.style.transition = "";
+    if (dy > 90) closeDetails(); else panel.style.transform = "";
+    startY = null;
+  });
+})();
+
+applyTheme(); renderRegion(); renderGenres(); renderProviders(); renderRating(); renderEra(); renderTime(); renderLang(); renderKeyState(); renderMode();
+if (tmdbKey()) loadLogos();
+</script>
+</body>
+</html>
